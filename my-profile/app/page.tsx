@@ -10,9 +10,9 @@ export default function Home() {
             안녕하세요! 바이브 코딩을 배우고 있는 대학생입니다.
           </p>
         </div>
-        
+
         <div className="h-px w-12 bg-zinc-300 dark:bg-zinc-800" />
-        
+
         <div className="flex gap-4">
           <a
             href="https://github.com"
@@ -33,3 +33,4 @@ export default function Home() {
     </div>
   );
 }
+
