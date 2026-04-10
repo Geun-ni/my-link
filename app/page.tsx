@@ -16,6 +16,10 @@ import {
 import Link from "next/link";
 import { RiLinksLine, RiArrowRightSLine, RiAddLine } from "@remixicon/react";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 function getFaviconUrl(url: string) {
   try {
     const domain = new URL(url).hostname;
@@ -25,33 +29,63 @@ function getFaviconUrl(url: string) {
   }
 }
 
+const linkSchema = z.object({
+  title: z.string().min(1, "타이틀을 입력해주세요."),
+  url: z.string().min(1, "URL을 입력해주세요.").superRefine((val, ctx) => {
+    let formattedUrl = val.trim();
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+    try {
+      const parsed = new URL(formattedUrl);
+      if (parsed.hostname !== "localhost" && !parsed.hostname.includes(".")) {
+        throw new Error("Invalid domain format");
+      }
+    } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "올바른 URL 형식이 아닙니다.",
+      });
+    }
+  }),
+});
+
+type LinkFormValues = z.infer<typeof linkSchema>;
+
 export default function Page() {
   const [links, setLinks] = useState<LinkItem[]>(dummyLinks);
   const [isOpen, setIsOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newUrl, setNewUrl] = useState("");
 
-  const handleAddLink = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newUrl.trim()) return;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LinkFormValues>({
+    resolver: zodResolver(linkSchema),
+    defaultValues: {
+      title: "",
+      url: "",
+    },
+  });
 
-    let formattedUrl = newUrl.trim();
+  const onSubmit = (data: LinkFormValues) => {
+    let formattedUrl = data.url.trim();
     if (!/^https?:\/\//i.test(formattedUrl)) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
     const newLink: LinkItem = {
       id: Date.now().toString(),
-      title: newTitle.trim(),
+      title: data.title.trim(),
       url: formattedUrl,
       clicks: 0,
     };
 
     setLinks([newLink, ...links]);
     
-    setNewTitle("");
-    setNewUrl("");
     setIsOpen(false);
+    reset();
   };
 
   return (
@@ -82,7 +116,10 @@ export default function Page() {
         <div className="w-full flex flex-col gap-4">
           
           {/* Add Link Dialog Trigger */}
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <Dialog open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) reset();
+          }}>
             <DialogTrigger 
               render={
                 <Button 
@@ -101,29 +138,28 @@ export default function Page() {
               <DialogHeader>
                 <DialogTitle className="text-center text-xl font-bold">링크 추가</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleAddLink} className="space-y-6 mt-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-sm font-medium">타이틀</Label>
                   <Input 
                     id="title" 
                     placeholder="예: 내 포트폴리오" 
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    required
-                    className="h-12 rounded-xl"
+                    {...register("title")}
+                    className={`h-12 rounded-xl transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   />
+                  {errors.title && <p className="text-sm text-red-500 animate-in fade-in slide-in-from-top-1">{errors.title.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="url" className="text-sm font-medium">URL</Label>
                   <Input 
                     id="url" 
-                    type="url"
-                    placeholder="예: https://example.com" 
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    required
-                    className="h-12 rounded-xl"
+                    type="text"
+                    placeholder="예: example.com" 
+                    {...register("url")}
+                    className={`h-12 rounded-xl transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    dir="ltr"
                   />
+                  {errors.url && <p className="text-sm text-red-500 animate-in fade-in slide-in-from-top-1">{errors.url.message}</p>}
                 </div>
                 <Button type="submit" className="w-full h-12 rounded-xl font-semibold text-md">
                   저장하기
