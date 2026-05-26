@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { dummyLinks, LinkItem } from "@/data/links";
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +55,20 @@ const linkSchema = z.object({
 type LinkFormValues = z.infer<typeof linkSchema>;
 
 export default function Page() {
-  const [links, setLinks] = useState<LinkItem[]>(dummyLinks);
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const q = query(collection(db, "users/anonymous/links"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const linksData = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as LinkItem[];
+      setLinks(linksData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const {
     register,
@@ -69,23 +83,25 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: LinkFormValues) => {
+  const onSubmit = async (data: LinkFormValues) => {
     let formattedUrl = data.url.trim();
     if (!/^https?:\/\//i.test(formattedUrl)) {
       formattedUrl = `https://${formattedUrl}`;
     }
 
-    const newLink: LinkItem = {
-      id: Date.now().toString(),
-      title: data.title.trim(),
-      url: formattedUrl,
-      clicks: 0,
-    };
-
-    setLinks([newLink, ...links]);
-    
-    setIsOpen(false);
-    reset();
+    try {
+      await addDoc(collection(db, "users/anonymous/links"), {
+        title: data.title.trim(),
+        url: formattedUrl,
+        clicks: 0,
+        createdAt: serverTimestamp()
+      });
+      
+      setIsOpen(false);
+      reset();
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
   };
 
   return (
