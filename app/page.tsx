@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { dummyLinks, LinkItem } from "@/data/links";
+import { LinkItem } from "@/data/links";
 import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Link from "next/link";
-import { RiLinksLine, RiArrowRightSLine, RiAddLine } from "@remixicon/react";
+import { RiLinksLine, RiArrowRightSLine, RiAddLine, RiLoader4Line } from "@remixicon/react";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,6 +57,8 @@ type LinkFormValues = z.infer<typeof linkSchema>;
 export default function Page() {
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "users/anonymous/links"), orderBy("createdAt", "desc"));
@@ -66,6 +68,7 @@ export default function Page() {
         id: doc.id
       })) as LinkItem[];
       setLinks(linksData);
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -89,6 +92,8 @@ export default function Page() {
       formattedUrl = `https://${formattedUrl}`;
     }
 
+    setIsOpen(false);
+    setIsSubmitting(true);
     try {
       await addDoc(collection(db, "users/anonymous/links"), {
         title: data.title.trim(),
@@ -97,10 +102,11 @@ export default function Page() {
         createdAt: serverTimestamp()
       });
       
-      setIsOpen(false);
       reset();
     } catch (e) {
       console.error("Error adding document: ", e);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -133,22 +139,35 @@ export default function Page() {
           
           {/* Add Link Dialog Trigger */}
           <Dialog open={isOpen} onOpenChange={(open) => {
+            if (isSubmitting) return;
             setIsOpen(open);
             if (!open) reset();
           }}>
             <DialogTrigger 
               render={
                 <Button 
+                  disabled={isSubmitting}
                   className="w-full group rounded-[1.25rem] h-14 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-slate-200/60 dark:border-slate-700/60 hover:bg-white dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100 mb-4 transition-all duration-500 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.04)] hover:-translate-y-1 relative overflow-hidden"
                 />
               }
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-              <div className="absolute inset-0 ring-1 ring-inset ring-transparent group-hover:ring-indigo-500/20 dark:group-hover:ring-indigo-400/20 rounded-[1.25rem] transition-colors duration-500" />
-              <RiAddLine className="mr-2 h-6 w-6 text-indigo-500 dark:text-indigo-400 opacity-80 group-hover:rotate-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500 ease-out" />
-              <span className="font-semibold tracking-wide bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 group-hover:from-indigo-600 group-hover:to-indigo-500 dark:group-hover:from-indigo-300 dark:group-hover:to-indigo-200 bg-clip-text text-transparent transition-all duration-500">
-                새로운 링크 추가하기
-              </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                <div className="absolute inset-0 ring-1 ring-inset ring-transparent group-hover:ring-indigo-500/20 dark:group-hover:ring-indigo-400/20 rounded-[1.25rem] transition-colors duration-500" />
+                {isSubmitting ? (
+                  <>
+                    <RiLoader4Line className="mr-2 h-6 w-6 text-indigo-500 dark:text-indigo-400 opacity-80 animate-spin" />
+                    <span className="font-semibold tracking-wide bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 bg-clip-text text-transparent">
+                      추가 중...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <RiAddLine className="mr-2 h-6 w-6 text-indigo-500 dark:text-indigo-400 opacity-80 group-hover:rotate-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500 ease-out" />
+                    <span className="font-semibold tracking-wide bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-300 dark:to-slate-100 group-hover:from-indigo-600 group-hover:to-indigo-500 dark:group-hover:from-indigo-300 dark:group-hover:to-indigo-200 bg-clip-text text-transparent transition-all duration-500">
+                      새로운 링크 추가하기
+                    </span>
+                  </>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-md rounded-2xl">
               <DialogHeader>
@@ -185,7 +204,18 @@ export default function Page() {
           </Dialog>
 
           {/* Link List */}
-          {links.map((link) => {
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={`skeleton-${i}`} className="border-0 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl shadow-sm rounded-[1.25rem] overflow-hidden ring-1 ring-black/5 dark:ring-white/10 animate-pulse">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-700/50"></div>
+                    <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-700/50"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : links.map((link) => {
             const faviconUrl = getFaviconUrl(link.url);
 
             return (
