@@ -1,9 +1,12 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface LinkItem {
   id: string;
   title: string;
   url: string;
   icon?: string; // (선택) PRD 명세에 따라 Google Favicon API를 통해 자동 생성될 수도 있습니다.
   clicks?: number; // PRD: 추후 조회수 통계 기능을 위한 모델링 여백
+  updatedAt?: Timestamp | Date; // 마지막 수정 시각
 }
 
 export const dummyLinks: LinkItem[] = [
