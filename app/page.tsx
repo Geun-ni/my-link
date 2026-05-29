@@ -1,24 +1,26 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { LinkItem } from "@/data/links";
 import {
   collection,
   addDoc,
-  getDocs,
   query,
   orderBy,
   serverTimestamp,
   doc,
   updateDoc,
   deleteDoc,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useAuth } from "@/hooks/useAuth";
+import { checkDisplayNameAvailable } from "@/lib/firestore";
+import { useAuth, UpdateProfileData } from "@/hooks/useAuth";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -37,12 +39,17 @@ import {
   RiDeleteBinLine,
   RiGoogleLine,
   RiLockLine,
+  RiCheckLine,
+  RiCloseLine,
 } from "@remixicon/react";
+import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
+// Google Favicon API
 function getFaviconUrl(url: string) {
   try {
     const domain = new URL(url).hostname;
@@ -52,6 +59,7 @@ function getFaviconUrl(url: string) {
   }
 }
 
+// 수정 시간 포맷팅
 function formatUpdatedAt(updatedAt?: LinkItem["updatedAt"]): string | null {
   if (!updatedAt) return null;
   const date =
@@ -71,6 +79,7 @@ function formatUpdatedAt(updatedAt?: LinkItem["updatedAt"]): string | null {
   return `${date.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} 수정`;
 }
 
+// 링크 유효성 스키마
 const linkSchema = z.object({
   title: z.string().min(1, "타이틀을 입력해주세요."),
   url: z
@@ -83,7 +92,6 @@ const linkSchema = z.object({
       }
       try {
         const parsed = new URL(formattedUrl);
-
         const rawDomain = val
           .trim()
           .replace(/^https?:\/\//i, "")
@@ -102,22 +110,362 @@ const linkSchema = z.object({
 
 type LinkFormValues = z.infer<typeof linkSchema>;
 
+// ─── 프로필 인라인 편집기 ──────────────────────────────────────────────────────
+function ProfileEditor({
+  userProfile,
+  userId,
+  updateProfile,
+}: {
+  userProfile: { displayName: string; bio: string; username: string; photoURL: string };
+  userId: string;
+  updateProfile: (data: UpdateProfileData) => Promise<void>;
+}) {
+  // displayName 편집 상태
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
+  const [displayNameValue, setDisplayNameValue] = useState(userProfile.displayName);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [isCheckingDisplayName, setIsCheckingDisplayName] = useState(false);
+  const [isSavingDisplayName, setIsSavingDisplayName] = useState(false);
+  const displayNameInputRef = useRef<HTMLInputElement>(null);
+
+  // bio 편집 상태
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bioValue, setBioValue] = useState(userProfile.bio);
+  const [isSavingBio, setIsSavingBio] = useState(false);
+  const bioTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // username 편집 상태
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameValue, setUsernameValue] = useState(userProfile.username);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+
+  // displayName 유효성 검사
+  function validateDisplayName(value: string): string | null {
+    if (value.trim().length < 2) return "2자 이상 입력해주세요.";
+    if (value.trim().length > 30) return "30자 이하로 입력해주세요.";
+    if (!/^[a-z0-9._-]+$/i.test(value.trim()))
+      return "영문, 숫자, 점(.), 하이픈(-), 밑줄(_)만 사용 가능합니다.";
+    return null;
+  }
+
+  // displayName 편집 시작
+  const startEditingDisplayName = () => {
+    setDisplayNameValue(userProfile.displayName);
+    setDisplayNameError(null);
+    setIsEditingDisplayName(true);
+    setTimeout(() => displayNameInputRef.current?.focus(), 0);
+  };
+
+  // displayName 저장
+  const saveDisplayName = async () => {
+    const trimmed = displayNameValue.trim();
+    const validationError = validateDisplayName(trimmed);
+    if (validationError) {
+      setDisplayNameError(validationError);
+      return;
+    }
+    // 변경 사항이 없는 경우 처리 회피
+    if (trimmed === userProfile.displayName) {
+      setIsEditingDisplayName(false);
+      return;
+    }
+    setIsCheckingDisplayName(true);
+    setDisplayNameError(null);
+    try {
+      const isAvailable = await checkDisplayNameAvailable(trimmed, userId);
+      if (!isAvailable) {
+        setDisplayNameError("이미 사용 중인 URL입니다. 다른 이름을 입력해주세요.");
+        return;
+      }
+      setIsSavingDisplayName(true);
+      await updateProfile({ displayName: trimmed });
+      setIsEditingDisplayName(false);
+      toast.success("URL이 변경되었습니다!", {
+        description: `새 주소: @${trimmed}`,
+        duration: 4000,
+      });
+    } catch {
+      setDisplayNameError("저장 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsCheckingDisplayName(false);
+      setIsSavingDisplayName(false);
+    }
+  };
+
+  const cancelDisplayName = () => {
+    setDisplayNameValue(userProfile.displayName);
+    setDisplayNameError(null);
+    setIsEditingDisplayName(false);
+  };
+
+  const handleDisplayNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveDisplayName();
+    } else if (e.key === "Escape") {
+      cancelDisplayName();
+    }
+  };
+
+  // bio 저장
+  const saveBio = async () => {
+    const trimmed = bioValue.trim();
+    if (trimmed === userProfile.bio) {
+      setIsEditingBio(false);
+      return;
+    }
+    setIsSavingBio(true);
+    try {
+      await updateProfile({ bio: trimmed });
+      setIsEditingBio(false);
+      toast.success("소개가 저장되었습니다.", { duration: 2000 });
+    } catch {
+      toast.error("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const handleBioKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      saveBio();
+    } else if (e.key === "Escape") {
+      setBioValue(userProfile.bio);
+      setIsEditingBio(false);
+    }
+  };
+
+  // username 저장
+  const saveUsername = async () => {
+    const trimmed = usernameValue.trim();
+    if (trimmed.length < 1) {
+      setUsernameError("이름을 1자 이상 입력해주세요.");
+      return;
+    }
+    if (trimmed.length > 50) {
+      setUsernameError("이름을 50자 이하로 입력해주세요.");
+      return;
+    }
+    // 변경 사항이 없는 경우 처리 회피
+    if (trimmed === userProfile.username) {
+      setIsEditingUsername(false);
+      return;
+    }
+    setIsSavingUsername(true);
+    try {
+      await updateProfile({ username: trimmed });
+      setIsEditingUsername(false);
+      toast.success("이름이 저장되었습니다.", { duration: 2000 });
+    } catch {
+      toast.error("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingUsername(false);
+    }
+  };
+
+  const handleUsernameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveUsername();
+    } else if (e.key === "Escape") {
+      setUsernameValue(userProfile.username);
+      setUsernameError(null);
+      setIsEditingUsername(false);
+    }
+  };
+
+  const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
+
+  return (
+    <div className="flex flex-col items-center gap-4 text-center w-full">
+      {/* 프로필 사진 */}
+      <div className="group relative flex h-28 w-28 items-center justify-center rounded-full shadow-md ring-4 ring-fuchsia-200 dark:ring-purple-800 transition-transform duration-300 hover:scale-105 overflow-hidden">
+        {userProfile.photoURL ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={userProfile.photoURL}
+            alt={userProfile.username}
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          <div className="h-full w-full rounded-full bg-gradient-to-br from-fuchsia-400 to-purple-600 flex items-center justify-center">
+            <span className="text-3xl font-bold text-white">
+              {(userProfile.username || userProfile.displayName || "?")[0].toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3 mt-1 w-full font-sans">
+        {/* username: Google 계정 실제 이름 (인라인 편집) */}
+        <div className="flex flex-col items-center gap-1">
+          {isEditingUsername ? (
+            <div className="w-full max-w-[300px] space-y-2">
+              <Input
+                ref={usernameInputRef}
+                value={usernameValue}
+                onChange={(e) => {
+                  setUsernameValue(e.target.value);
+                  if (usernameError) setUsernameError(null);
+                }}
+                onKeyDown={handleUsernameKeyDown}
+                onBlur={saveUsername}
+                disabled={isLoading}
+                placeholder="이름 입력"
+                className="h-9 rounded-xl text-center text-lg font-bold bg-white/90 dark:bg-purple-950/80 border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400"
+              />
+              {usernameError && (
+                <p className="text-xs text-red-500 text-center animate-in fade-in slide-in-from-top-1">
+                  {usernameError}
+                </p>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setIsEditingUsername(true);
+                setTimeout(() => usernameInputRef.current?.focus(), 0);
+              }}
+              className="group/un flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text text-2xl font-extrabold tracking-tight text-purple-950 dark:text-white"
+              title="클릭하여 이름 변경"
+            >
+              <span>{userProfile.username}</span>
+            </button>
+          )}
+        </div>
+
+        {/* displayName: URL slug (인라인 편집) */}
+        <div className="flex flex-col items-center gap-1">
+          {isEditingDisplayName ? (
+            <div className="w-full max-w-[300px] space-y-2">
+              <div className="relative flex items-center gap-1.5">
+                <span className="text-sm text-slate-400 dark:text-slate-500 shrink-0 font-mono">@</span>
+                <Input
+                  ref={displayNameInputRef}
+                  value={displayNameValue}
+                  onChange={(e) => {
+                    setDisplayNameValue(e.target.value);
+                    if (displayNameError) setDisplayNameError(null);
+                  }}
+                  onKeyDown={handleDisplayNameKeyDown}
+                  disabled={isLoading}
+                  placeholder="URL 슬러그 입력"
+                  className={`h-9 rounded-xl font-mono text-sm bg-white/90 dark:bg-purple-950/80 pr-16 transition-colors ${
+                    displayNameError
+                      ? "border-red-400 focus-visible:ring-red-400"
+                      : "border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400"
+                  }`}
+                />
+                <div className="absolute right-1.5 flex items-center gap-0.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={saveDisplayName}
+                    disabled={isLoading}
+                    className="h-7 w-7 rounded-full text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                  >
+                    {isCheckingDisplayName || isSavingDisplayName ? (
+                      <RiLoader4Line className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RiCheckLine className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={cancelDisplayName}
+                    disabled={isLoading}
+                    className="h-7 w-7 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <RiCloseLine className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {displayNameError && (
+                <p className="text-xs text-red-500 text-center animate-in fade-in slide-in-from-top-1">
+                  {displayNameError}
+                </p>
+              )}
+              <p className="text-[11px] text-amber-500 dark:text-amber-400 flex items-center justify-center gap-1">
+                ⚠️ URL이 변경되면 기존 공유 링크는 무효화됩니다.
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={startEditingDisplayName}
+              className="group/dn flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text"
+              title="클릭하여 URL 변경"
+            >
+              <span className="text-sm text-slate-400 dark:text-slate-500 font-mono">@</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">
+                {userProfile.displayName}
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* bio: 인라인 편집 */}
+        <div className="flex flex-col items-center gap-1">
+          {isEditingBio ? (
+            <div className="w-full max-w-[300px] space-y-2">
+              <Textarea
+                ref={bioTextareaRef}
+                value={bioValue}
+                onChange={(e) => setBioValue(e.target.value)}
+                onKeyDown={handleBioKeyDown}
+                onBlur={saveBio}
+                disabled={isLoading}
+                placeholder="한 줄 소개를 입력하세요..."
+                rows={2}
+                className="rounded-xl text-sm resize-none bg-white/90 dark:bg-purple-950/80 border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400 text-center"
+              />
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                Enter로 저장 · Shift+Enter로 줄바꿈 · Esc로 취소
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setIsEditingBio(true);
+                setTimeout(() => bioTextareaRef.current?.focus(), 0);
+              }}
+              className="group/bio flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text max-w-[300px] text-center"
+              title="클릭하여 소개 수정"
+            >
+              <span
+                className={`text-sm ${
+                  userProfile.bio
+                    ? "text-slate-500 dark:text-slate-400"
+                    : "text-slate-300 dark:text-slate-600 italic"
+                }`}
+              >
+                {userProfile.bio || "소개를 입력하세요..."}
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 링크 아이템 카드 ────────────────────────────────────────────────────────
 function LinkItemCard({
   link,
   userId,
-  onUpdateSuccess,
-  onDeleteSuccess,
 }: {
   link: LinkItem;
   userId: string;
-  onUpdateSuccess: (id: string, data: Partial<LinkItem>) => void;
-  onDeleteSuccess: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const isCancellingRef = useRef(false);
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -132,31 +480,32 @@ function LinkItemCard({
     },
   });
 
-  const onUpdate = async (data: LinkFormValues) => {
-    let formattedUrl = data.url.trim();
-    if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    setIsSubmitting(true);
-    try {
+  // TanStack Query 링크 수정 Mutation
+  const updateLinkMutation = useMutation({
+    mutationFn: async (data: LinkFormValues) => {
+      let formattedUrl = data.url.trim();
+      if (!/^https?:\/\//i.test(formattedUrl)) {
+        formattedUrl = `https://${formattedUrl}`;
+      }
       if (!link.id) return;
       await updateDoc(doc(db, `users/${userId}/links`, link.id), {
         title: data.title.trim(),
         url: formattedUrl,
         updatedAt: serverTimestamp(),
       });
-      onUpdateSuccess(link.id, {
-        title: data.title.trim(),
-        url: formattedUrl,
-        updatedAt: new Date(),
-      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", userId] });
       setIsEditing(false);
-    } catch (e) {
-      console.error("Error updating document: ", e);
-    } finally {
-      setIsSubmitting(false);
-    }
+      toast.success("링크가 수정되었습니다.");
+    },
+    onError: () => {
+      toast.error("링크 수정 중 오류가 발생했습니다.");
+    },
+  });
+
+  const onUpdate = async (data: LinkFormValues) => {
+    await updateLinkMutation.mutateAsync(data);
   };
 
   const handleCancel = () => {
@@ -171,29 +520,35 @@ function LinkItemCard({
   const handleFormBlur = (e: React.FocusEvent<HTMLFormElement>) => {
     if (e.currentTarget.contains(e.relatedTarget as Node)) return;
     if (isCancellingRef.current) return;
-    if (isSubmitting) return;
+    if (updateLinkMutation.isPending) return;
     handleSubmit(onUpdate)();
   };
 
-  const onDelete = async () => {
-    setIsDeleting(true);
-    try {
+  // TanStack Query 링크 삭제 Mutation
+  const deleteLinkMutation = useMutation({
+    mutationFn: async () => {
       if (!link.id) return;
       await deleteDoc(doc(db, `users/${userId}/links`, link.id));
-      onDeleteSuccess(link.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", userId] });
       setIsDeleteDialogOpen(false);
-    } catch (e) {
-      console.error("Error deleting document: ", e);
-    } finally {
-      setIsDeleting(false);
-    }
+      toast.success("링크가 삭제되었습니다.");
+    },
+    onError: () => {
+      toast.error("링크 삭제 중 오류가 발생했습니다.");
+    },
+  });
+
+  const onDelete = async () => {
+    await deleteLinkMutation.mutateAsync();
   };
 
   const faviconUrl = getFaviconUrl(link.url);
 
   if (isEditing) {
     return (
-      <Card className="border-0 bg-fuchsia-50/80 dark:bg-purple-950/60 backdrop-blur-xl shadow-sm rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/50 dark:ring-purple-500/20 p-4 relative">
+      <Card className="border-0 bg-fuchsia-50/80 dark:bg-purple-950/60 backdrop-blur-xl shadow-sm rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/50 dark:ring-purple-500/20 p-4 relative font-sans">
         <form
           onSubmit={handleSubmit(onUpdate)}
           onBlur={handleFormBlur}
@@ -228,7 +583,7 @@ function LinkItemCard({
               size="sm"
               className="rounded-lg h-10 px-4 font-medium"
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={updateLinkMutation.isPending}
             >
               취소
             </Button>
@@ -236,9 +591,9 @@ function LinkItemCard({
               type="submit"
               size="sm"
               className="rounded-lg h-10 px-4 font-medium"
-              disabled={isSubmitting}
+              disabled={updateLinkMutation.isPending}
             >
-              {isSubmitting ? (
+              {updateLinkMutation.isPending ? (
                 <RiLoader4Line className="h-4 w-4 animate-spin mr-1.5" />
               ) : null}
               저장
@@ -250,7 +605,7 @@ function LinkItemCard({
   }
 
   return (
-    <Card className="border-0 bg-white/70 dark:bg-purple-950/50 backdrop-blur-xl shadow-[0_2px_10px_-3px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.15)] dark:shadow-none dark:hover:bg-purple-950/70 transition-all duration-300 ease-out group/card rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/40 dark:ring-purple-500/20 relative hover:-translate-y-1">
+    <Card className="border-0 bg-white/70 dark:bg-purple-950/50 backdrop-blur-xl shadow-[0_2px_10px_-3px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.15)] dark:shadow-none dark:hover:bg-purple-950/70 transition-all duration-300 ease-out group/card rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/40 dark:ring-purple-500/20 relative hover:-translate-y-1 font-sans">
       <div className="flex items-center">
         <Link
           href={link.url}
@@ -305,7 +660,7 @@ function LinkItemCard({
           <Dialog
             open={isDeleteDialogOpen}
             onOpenChange={(open) => {
-              if (isDeleting) return;
+              if (deleteLinkMutation.isPending) return;
               setIsDeleteDialogOpen(open);
             }}
           >
@@ -342,7 +697,7 @@ function LinkItemCard({
                   variant="outline"
                   className="rounded-xl h-12 flex-1 font-semibold"
                   onClick={() => setIsDeleteDialogOpen(false)}
-                  disabled={isDeleting}
+                  disabled={deleteLinkMutation.isPending}
                 >
                   취소
                 </Button>
@@ -350,12 +705,12 @@ function LinkItemCard({
                   variant="destructive"
                   className="rounded-xl h-12 flex-1 font-semibold"
                   onClick={onDelete}
-                  disabled={isDeleting}
+                  disabled={deleteLinkMutation.isPending}
                 >
-                  {isDeleting ? (
+                  {deleteLinkMutation.isPending ? (
                     <RiLoader4Line className="h-5 w-5 animate-spin mr-2" />
                   ) : null}
-                  {isDeleting ? "삭제 중..." : "삭제하기"}
+                  {deleteLinkMutation.isPending ? "삭제 중..." : "삭제하기"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -369,7 +724,7 @@ function LinkItemCard({
 // ─── 비로그인 상태 화면 ────────────────────────────────────────────────────────
 function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 font-sans">
       <div className="w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
         {/* 아이콘 */}
         <div className="relative">
@@ -431,41 +786,27 @@ function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
 
 // ─── 메인 대시보드 (로그인 후) ────────────────────────────────────────────────
 export default function Page() {
-  const { user, userProfile, loading: authLoading, signInWithGoogle } = useAuth();
-  const [links, setLinks] = useState<LinkItem[]>([]);
+  const { user, userProfile, loading: authLoading, signInWithGoogle, updateProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
-  // 로그인 상태가 변경될 때마다 링크 재조회
-  useEffect(() => {
-    if (!user) {
-      setLinks([]);
-      return;
-    }
-
-    const fetchLinks = async () => {
-      setIsLoading(true);
-      try {
-        const q = query(
-          collection(db, `users/${user.uid}/links`),
-          orderBy("createdAt", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        const linksData = querySnapshot.docs.map((d) => ({
-          ...d.data(),
-          id: d.id,
-        })) as LinkItem[];
-        setLinks(linksData);
-      } catch (error) {
-        console.error("Error fetching links:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLinks();
-  }, [user]);
+  // TanStack Query로 링크 목록 조회 및 캐싱
+  const { data: links = [], isLoading: isLinksLoading } = useQuery<LinkItem[]>({
+    queryKey: ["links", user?.uid],
+    queryFn: async () => {
+      if (!user) return [];
+      const q = query(
+        collection(db, `users/${user.uid}/links`),
+        orderBy("createdAt", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map((d) => ({
+        ...d.data(),
+        id: d.id,
+      })) as LinkItem[];
+    },
+    enabled: !!user,
+  });
 
   const {
     register,
@@ -480,44 +821,40 @@ export default function Page() {
     },
   });
 
-  const onSubmit = async (data: LinkFormValues) => {
-    if (!user) return;
-
-    let formattedUrl = data.url.trim();
-    if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = `https://${formattedUrl}`;
-    }
-
-    setIsOpen(false);
-    setIsSubmitting(true);
-    try {
-      const docRef = await addDoc(collection(db, `users/${user.uid}/links`), {
+  // TanStack Query 링크 추가 Mutation
+  const addLinkMutation = useMutation({
+    mutationFn: async (data: LinkFormValues) => {
+      if (!user) return;
+      let formattedUrl = data.url.trim();
+      if (!/^https?:\/\//i.test(formattedUrl)) {
+        formattedUrl = `https://${formattedUrl}`;
+      }
+      await addDoc(collection(db, `users/${user.uid}/links`), {
         title: data.title.trim(),
         url: formattedUrl,
         clicks: 0,
         createdAt: serverTimestamp(),
       });
-
-      const newLink: LinkItem = {
-        id: docRef.id,
-        title: data.title.trim(),
-        url: formattedUrl,
-        clicks: 0,
-      };
-
-      setLinks((prev) => [newLink, ...prev]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["links", user?.uid] });
       reset();
-    } catch (e) {
-      console.error("Error adding document: ", e);
-    } finally {
-      setIsSubmitting(false);
-    }
+      toast.success("링크가 성공적으로 추가되었습니다.");
+    },
+    onError: () => {
+      toast.error("링크 추가 중 오류가 발생했습니다.");
+    },
+  });
+
+  const onSubmit = async (data: LinkFormValues) => {
+    setIsOpen(false);
+    await addLinkMutation.mutateAsync(data);
   };
 
   // ── 전체 로딩 (Auth 초기화 중) ──────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 font-sans">
         <div className="flex flex-col items-center gap-4">
           <RiLoader4Line className="h-10 w-10 animate-spin text-fuchsia-500" />
           <p className="text-sm text-slate-500 dark:text-slate-400">불러오는 중...</p>
@@ -533,45 +870,15 @@ export default function Page() {
 
   // ── 로그인 상태 대시보드 ──────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 selection:bg-fuchsia-200 dark:selection:bg-purple-800">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 selection:bg-fuchsia-200 dark:selection:bg-purple-800 font-sans">
       <div className="w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Profile Section */}
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="group relative flex h-28 w-28 items-center justify-center rounded-full shadow-md ring-4 ring-fuchsia-200 dark:ring-purple-800 transition-transform duration-300 hover:scale-105 overflow-hidden">
-            {userProfile.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={userProfile.photoURL}
-                alt={userProfile.username}
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full rounded-full bg-gradient-to-br from-fuchsia-400 to-purple-600 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">
-                  {(userProfile.username || userProfile.displayName || "?")[0].toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="space-y-1 mt-1">
-            {/* username: Google 계정 실제 이름 */}
-            <h1 className="text-2xl font-extrabold tracking-tight text-purple-950 dark:text-white">
-              {userProfile.username}
-            </h1>
-            {/* displayName: 이메일 앞부분 */}
-            <p className="text-sm text-slate-400 dark:text-slate-500 font-mono">
-              {userProfile.displayName}
-            </p>
-            {/* bio: 있을 때만 표시 */}
-            {userProfile.bio && (
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                {userProfile.bio}
-              </p>
-            )}
-          </div>
-        </div>
-
+        <ProfileEditor
+          userProfile={userProfile}
+          userId={user.uid}
+          updateProfile={updateProfile}
+        />
 
         {/* Links Section */}
         <div className="w-full flex flex-col gap-4">
@@ -580,7 +887,7 @@ export default function Page() {
           <Dialog
             open={isOpen}
             onOpenChange={(open) => {
-              if (isSubmitting) return;
+              if (addLinkMutation.isPending) return;
               setIsOpen(open);
               if (!open) reset();
             }}
@@ -588,14 +895,14 @@ export default function Page() {
             <DialogTrigger
               render={
                 <Button
-                  disabled={isSubmitting}
+                  disabled={addLinkMutation.isPending}
                   className="w-full group rounded-[1.25rem] h-14 bg-white/80 dark:bg-purple-950/80 backdrop-blur-md border border-fuchsia-200/60 dark:border-purple-700/60 hover:bg-fuchsia-50 dark:hover:bg-purple-900/60 text-fuchsia-700 dark:text-purple-200 mb-4 transition-all duration-500 shadow-sm hover:shadow-[0_8px_30px_rgba(168,85,247,0.12)] dark:hover:shadow-[0_8px_30px_rgba(168,85,247,0.08)] hover:-translate-y-1 relative overflow-hidden"
                 />
               }
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fuchsia-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
               <div className="absolute inset-0 ring-1 ring-inset ring-transparent group-hover:ring-fuchsia-400/30 dark:group-hover:ring-purple-400/30 rounded-[1.25rem] transition-colors duration-500" />
-              {isSubmitting ? (
+              {addLinkMutation.isPending ? (
                 <>
                   <RiLoader4Line className="mr-2 h-6 w-6 text-fuchsia-500 dark:text-purple-400 opacity-80 animate-spin" />
                   <span className="font-semibold tracking-wide text-fuchsia-700 dark:text-purple-200">
@@ -658,7 +965,7 @@ export default function Page() {
                 <Button
                   type="submit"
                   className="w-full h-12 rounded-xl font-semibold text-md"
-                  disabled={isSubmitting}
+                  disabled={addLinkMutation.isPending}
                 >
                   저장하기
                 </Button>
@@ -667,7 +974,7 @@ export default function Page() {
           </Dialog>
 
           {/* Link List */}
-          {isLoading
+          {isLinksLoading
             ? Array.from({ length: 3 }).map((_, i) => (
                 <Card
                   key={`skeleton-${i}`}
@@ -686,21 +993,11 @@ export default function Page() {
                   key={link.id}
                   link={link}
                   userId={user.uid}
-                  onUpdateSuccess={(id, updatedData) => {
-                    setLinks((prev) =>
-                      prev.map((l) =>
-                        l.id === id ? { ...l, ...updatedData } : l
-                      )
-                    );
-                  }}
-                  onDeleteSuccess={(id) => {
-                    setLinks((prev) => prev.filter((l) => l.id !== id));
-                  }}
                 />
               ))}
 
           {/* 링크가 없을 때 빈 상태 */}
-          {!isLoading && links.length === 0 && (
+          {!isLinksLoading && links.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-fuchsia-100 dark:bg-purple-900/40">
                 <RiLinksLine className="h-8 w-8 text-fuchsia-400 dark:text-purple-400" />

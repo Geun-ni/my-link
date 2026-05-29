@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/app/providers";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'})
 
@@ -26,9 +27,11 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <Header />
-          <main>{children}</main>
-          <Toaster />
+          <Providers>
+            <Header />
+            <main>{children}</main>
+            <Toaster />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
