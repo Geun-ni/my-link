@@ -16,15 +16,17 @@ import {
 import { db } from "@/lib/firebase";
 import { notFound } from "next/navigation";
 import { LinkItem } from "@/data/links";
-import { UserProfile } from "@/hooks/useAuth";
+import { UserProfile, useAuth } from "@/hooks/useAuth";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   RiLinksLine,
   RiArrowRightSLine,
   RiLoader4Line,
   RiShareLine,
   RiAlertLine,
+  RiEditLine,
 } from "@remixicon/react";
 import { toast } from "sonner";
 
@@ -45,6 +47,9 @@ function getFaviconUrl(url: string) {
 export default function PublicProfilePage({ params }: PageProps) {
   // Next.js 16/React 19 비동기 params 풀기
   const { displayName } = React.use(params);
+  
+  // 현재 로그인한 사용자 정보 조회
+  const { user: currentUser } = useAuth();
 
   // TanStack Query로 유저 프로필 및 링크 정보 통합 조회 및 캐싱
   const {
@@ -158,6 +163,7 @@ export default function PublicProfilePage({ params }: PageProps) {
   }
 
   const { userProfile, links } = data;
+  const isMyPage = !!(currentUser && data?.userId && currentUser.uid === data.userId);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 font-sans">
@@ -196,10 +202,21 @@ export default function PublicProfilePage({ params }: PageProps) {
             )}
           </div>
 
-          {/* 사용자 정보 */}
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-0.5">
-            {userProfile.username}
-          </h1>
+          {/* 사용자 정보 및 편집 바로가기 */}
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              {userProfile.username}
+            </h1>
+            {isMyPage && (
+              <Link
+                href="/"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-fuchsia-500 hover:text-fuchsia-700 hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors"
+                title="대시보드에서 프로필 편집하기"
+              >
+                <RiEditLine className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
           <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mb-3">
             @{userProfile.displayName}
           </p>
@@ -228,13 +245,11 @@ export default function PublicProfilePage({ params }: PageProps) {
                 <Card
                   key={link.id}
                   className="border-0 bg-white/70 dark:bg-purple-950/50 backdrop-blur-xl shadow-[0_2px_10px_-3px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.15)] dark:shadow-none dark:hover:bg-purple-950/70 transition-all duration-300 ease-out group rounded-2xl overflow-hidden ring-1 ring-fuchsia-200/40 dark:ring-purple-500/20 relative hover:-translate-y-0.5 cursor-pointer"
-                  onClick={() => handleLinkClick(link.id, link.url)}
                 >
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => e.preventDefault()} // onClick 핸들러로 클릭 트래킹 후 열기 위해 디폴트 방지
                     className="flex items-center justify-between p-4 w-full focus:outline-none"
                   >
                     <div className="flex items-center gap-4 w-full overflow-hidden">

@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // [헬퍼 함수] 로그인 여부 확인
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // [헬퍼 함수] 본인 소유 문서 여부 확인
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 1. Users 컬렉션 (사용자 프로필)
+    match /users/{userId} {
+      // 단일 사용자 프로필 조회는 누구나 허용 (예: 프로필 페이지 렌더링)
+      allow get: if true;
+
+      // 컬렉션 쿼리(list) 조회 규칙:
+      // 누구나 중복 검사를 수행할 수 있으나, 전체 회원 목록 크롤링을 방지하기 위해 
+      // 1) 한 번에 조회하는 리미트가 5개 이하이고, 2) 'displayName' 필터를 사용한 검색일 때만 조회를 허용합니다.
+      allow list: if request.query.limit <= 5 && 
+                    request.query.filters.size() > 0 && 
+                    ('displayName' in request.query.filters[0].field || 
+                     'displayName' in request.query.filters[1].field);
+      
+      // 본인 계정만 생성 가능 (최초 가입 시)
+      allow create: if isOwner(userId);
+      
+      // 본인 계정만 수정 가능 (프로필 편집: displayName, bio, username 등)
+      allow update: if isOwner(userId);
+      
+      // 프로필 삭제는 기본적으로 비허용 (탈퇴 기능 대비 보수적 보안 설계)
+      allow delete: if false;
+    }
+
+    // 2. Links 컬렉션 (유저별 링크 리스트)
+    match /users/{userId}/links/{linkId} {
+      // 누구나 유저의 링크 리스트를 조회할 수 있음
+      allow read: if true;
+      
+      // 본인만 링크를 새로 생성(추가)할 수 있음
+      allow create: if isOwner(userId);
+      
+      // 본인만 링크를 삭제할 수 있음
+      allow delete: if isOwner(userId);
+      
+      // 본인만 링크 정보를 수정할 수 있음
+      allow update: if isOwner(userId);
+    }
+  }
+}
