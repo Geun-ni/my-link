@@ -32,7 +32,7 @@ export function Header() {
 
   const profileUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/${userProfile?.username ?? ""}`
+      ? `${window.location.origin}/${userProfile?.displayName ?? ""}`
       : "";
 
   const handleCopyLink = async () => {
@@ -69,10 +69,20 @@ export function Header() {
             </div>
           ) : user && userProfile ? (
             // ── 로그인 상태: 프로필 드롭다운 ──────────────────────────────────
-            <div className="relative" ref={dropdownRef}>
-              {/* 프로필 아바타 버튼 */}
-              <button
-                onClick={() => setDropdownOpen((v) => !v)}
+            <div className="flex items-center gap-3">
+              {/* 내 페이지 바로가기 버튼 */}
+              <Link
+                href={`/${userProfile.displayName}`}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 bg-fuchsia-50 dark:bg-fuchsia-950/40 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/60 rounded-xl transition-all shadow-sm shadow-fuchsia-100/50"
+              >
+                <RiExternalLinkLine className="h-3.5 w-3.5" />
+                <span>내 페이지</span>
+              </Link>
+
+              <div className="relative" ref={dropdownRef}>
+                {/* 프로필 아바타 버튼 */}
+                <button
+                  onClick={() => setDropdownOpen((v) => !v)}
                 className="flex items-center rounded-full p-0.5 hover:ring-2 hover:ring-fuchsia-300 dark:hover:ring-fuchsia-600 transition-all group"
                 aria-label="프로필 메뉴"
               >
@@ -133,7 +143,7 @@ export function Header() {
                   <div className="p-2 space-y-0.5">
                     {/* 내 페이지 미리보기 */}
                     <Link
-                      href={`/${userProfile.username}`}
+                      href={`/${userProfile.displayName}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setDropdownOpen(false)}
@@ -181,6 +191,7 @@ export function Header() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           ) : (
             // ── 비로그인 상태 ──────────────────────────────────────────────────
