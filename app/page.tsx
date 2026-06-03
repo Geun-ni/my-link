@@ -282,7 +282,7 @@ function ProfileEditor({
   return (
     <div className="flex flex-col items-center gap-4 text-center w-full">
       {/* 프로필 사진 */}
-      <div className="group relative flex h-28 w-28 items-center justify-center rounded-full shadow-md ring-4 ring-fuchsia-200 dark:ring-purple-800 transition-transform duration-300 hover:scale-105 overflow-hidden">
+      <div className="group relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-border shadow-sm transition-transform duration-300 hover:scale-105">
         {userProfile.photoURL ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -291,8 +291,8 @@ function ProfileEditor({
             className="h-full w-full rounded-full object-cover"
           />
         ) : (
-          <div className="h-full w-full rounded-full bg-gradient-to-br from-fuchsia-400 to-purple-600 flex items-center justify-center">
-            <span className="text-3xl font-bold text-white">
+          <div className="h-full w-full rounded-full bg-primary flex items-center justify-center">
+            <span className="text-3xl font-black text-white">
               {(userProfile.username || userProfile.displayName || "?")[0].toUpperCase()}
             </span>
           </div>
@@ -315,7 +315,7 @@ function ProfileEditor({
                 onBlur={saveUsername}
                 disabled={isLoading}
                 placeholder="이름 입력"
-                className="h-9 rounded-xl text-center text-lg font-bold bg-white/90 dark:bg-purple-950/80 border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400"
+                className="h-9 rounded-xl text-center text-lg font-bold bg-white dark:bg-card border border-border focus-visible:ring-1 focus-visible:ring-primary"
               />
               {usernameError && (
                 <p className="text-xs text-red-500 text-center animate-in fade-in slide-in-from-top-1">
@@ -329,7 +329,7 @@ function ProfileEditor({
                 setIsEditingUsername(true);
                 setTimeout(() => usernameInputRef.current?.focus(), 0);
               }}
-              className="group/un flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text text-2xl font-extrabold tracking-tight text-purple-950 dark:text-white"
+              className="group/un flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-text text-2xl font-black tracking-tight text-foreground dark:text-white"
               title="클릭하여 이름 변경"
             >
               <span>{userProfile.username}</span>
@@ -353,10 +353,10 @@ function ProfileEditor({
                   onKeyDown={handleDisplayNameKeyDown}
                   disabled={isLoading}
                   placeholder="URL 슬러그 입력"
-                  className={`h-9 rounded-xl font-mono text-sm bg-white/90 dark:bg-purple-950/80 pr-16 transition-colors ${
+                  className={`h-9 rounded-xl font-mono text-sm bg-white dark:bg-card pr-16 transition-colors ${
                     displayNameError
-                      ? "border-red-400 focus-visible:ring-red-400"
-                      : "border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400"
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : "border border-border focus-visible:ring-1 focus-visible:ring-primary"
                   }`}
                 />
                 <div className="absolute right-1.5 flex items-center gap-0.5">
@@ -366,7 +366,7 @@ function ProfileEditor({
                     size="icon"
                     onClick={saveDisplayName}
                     disabled={isLoading}
-                    className="h-7 w-7 rounded-full text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
+                    className="h-7 w-7 rounded-full text-emerald-600 border border-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
                   >
                     {isCheckingDisplayName || isSavingDisplayName ? (
                       <RiLoader4Line className="h-4 w-4 animate-spin" />
@@ -380,7 +380,7 @@ function ProfileEditor({
                     size="icon"
                     onClick={cancelDisplayName}
                     disabled={isLoading}
-                    className="h-7 w-7 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="h-7 w-7 rounded-full text-slate-500 border border-border hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     <RiCloseLine className="h-4 w-4" />
                   </Button>
@@ -398,7 +398,7 @@ function ProfileEditor({
           ) : (
             <button
               onClick={startEditingDisplayName}
-              className="group/dn flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text"
+              className="group/dn flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-text"
               title="클릭하여 URL 변경"
             >
               <span className="text-sm text-slate-400 dark:text-slate-500 font-mono">@</span>
@@ -422,9 +422,9 @@ function ProfileEditor({
                 disabled={isLoading}
                 placeholder="한 줄 소개를 입력하세요..."
                 rows={2}
-                className="rounded-xl text-sm resize-none bg-white/90 dark:bg-purple-950/80 border-fuchsia-300 dark:border-purple-600 focus-visible:ring-fuchsia-400 text-center"
+                className="rounded-xl text-sm resize-none bg-white dark:bg-card border border-border focus-visible:ring-1 focus-visible:ring-primary text-center"
               />
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                 Enter로 저장 · Shift+Enter로 줄바꿈 · Esc로 취소
               </p>
             </div>
@@ -434,14 +434,14 @@ function ProfileEditor({
                 setIsEditingBio(true);
                 setTimeout(() => bioTextareaRef.current?.focus(), 0);
               }}
-              className="group/bio flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-fuchsia-50 dark:hover:bg-purple-900/40 transition-colors cursor-text max-w-[300px] text-center"
+              className="group/bio flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors cursor-text max-w-[300px] text-center"
               title="클릭하여 소개 수정"
             >
               <span
                 className={`text-sm ${
                   userProfile.bio
-                    ? "text-slate-500 dark:text-slate-400"
-                    : "text-slate-300 dark:text-slate-600 italic"
+                    ? "text-slate-600 dark:text-slate-400 font-bold"
+                    : "text-slate-400 dark:text-slate-600 italic font-medium"
                 }`}
               >
                 {userProfile.bio || "소개를 입력하세요..."}
@@ -548,7 +548,7 @@ function LinkItemCard({
 
   if (isEditing) {
     return (
-      <Card className="border-0 bg-fuchsia-50/80 dark:bg-purple-950/60 backdrop-blur-xl shadow-sm rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/50 dark:ring-purple-500/20 p-4 relative font-sans">
+      <Card className="border border-border bg-card shadow-neo p-3.5 relative font-sans rounded-2xl overflow-hidden">
         <form
           onSubmit={handleSubmit(onUpdate)}
           onBlur={handleFormBlur}
@@ -558,7 +558,7 @@ function LinkItemCard({
             <Input
               placeholder="타이틀"
               {...register("title")}
-              className={`h-11 rounded-xl bg-white/70 dark:bg-purple-950/70 transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : "border-fuchsia-200/60 dark:border-purple-700/50"}`}
+              className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
             />
             {errors.title && (
               <p className="text-xs text-red-500 ml-1">{errors.title.message}</p>
@@ -569,7 +569,7 @@ function LinkItemCard({
               type="text"
               placeholder="URL"
               {...register("url")}
-              className={`h-11 rounded-xl bg-white/70 dark:bg-purple-950/70 transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : "border-fuchsia-200/60 dark:border-purple-700/50"}`}
+              className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
               dir="ltr"
             />
             {errors.url && (
@@ -581,7 +581,7 @@ function LinkItemCard({
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-lg h-10 px-4 font-medium"
+              className="rounded-xl h-9 px-4 font-bold border border-border"
               onClick={handleCancel}
               disabled={updateLinkMutation.isPending}
             >
@@ -590,7 +590,7 @@ function LinkItemCard({
             <Button
               type="submit"
               size="sm"
-              className="rounded-lg h-10 px-4 font-medium"
+              className="rounded-xl h-9 px-4 font-bold bg-primary text-white"
               disabled={updateLinkMutation.isPending}
             >
               {updateLinkMutation.isPending ? (
@@ -605,31 +605,31 @@ function LinkItemCard({
   }
 
   return (
-    <Card className="border-0 bg-white/70 dark:bg-purple-950/50 backdrop-blur-xl shadow-[0_2px_10px_-3px_rgba(168,85,247,0.15)] hover:shadow-[0_8px_30px_rgba(168,85,247,0.15)] dark:shadow-none dark:hover:bg-purple-950/70 transition-all duration-300 ease-out group/card rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-200/40 dark:ring-purple-500/20 relative hover:-translate-y-1 font-sans">
+    <Card className="border border-border bg-card shadow-neo hover:shadow-neo-hover transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px]">
       <div className="flex items-center">
         <Link
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-300 rounded-[1.25rem] flex items-center justify-between group overflow-hidden"
+          className="flex-1 py-3 px-4 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-2xl flex items-center justify-between group overflow-hidden"
         >
           <div className="flex items-center gap-4 z-10 w-full overflow-hidden">
             {faviconUrl ? (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 shadow-sm border border-slate-200/50 dark:border-slate-600/50 overflow-hidden">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={faviconUrl}
                   alt={`${link.title} icon`}
-                  className="h-6 w-6 object-contain"
+                  className="h-5 w-5 object-contain"
                 />
               </div>
             ) : (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700/50 shadow-sm border border-slate-200/50 dark:border-slate-600/50 overflow-hidden">
-                <RiLinksLine className="h-6 w-6 text-slate-500" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                <RiLinksLine className="h-5 w-5 text-primary shrink-0" />
               </div>
             )}
             <div className="flex flex-col justify-center gap-0.5 z-10 w-full overflow-hidden">
-              <CardTitle className="text-base font-semibold text-slate-800 dark:text-slate-100 group-hover:text-black dark:group-hover:text-white transition-colors truncate">
+              <CardTitle className="text-base font-bold text-foreground group-hover:underline transition-all truncate">
                 {link.title}
               </CardTitle>
               {formatUpdatedAt(link.updatedAt) && (
@@ -640,8 +640,8 @@ function LinkItemCard({
             </div>
           </div>
 
-          <div className="bg-slate-100 dark:bg-slate-700/50 p-1.5 rounded-full opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden sm:block shrink-0 mr-1">
-            <RiArrowRightSLine className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+          <div className="bg-primary/10 border border-primary/20 p-1.5 rounded-full opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden sm:block shrink-0 mr-1">
+            <RiArrowRightSLine className="h-5 w-5 text-primary" />
           </div>
         </Link>
 
@@ -651,7 +651,7 @@ function LinkItemCard({
             variant="ghost"
             size="icon"
             onClick={() => setIsEditing(true)}
-            className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-fuchsia-400 hover:text-fuchsia-700 dark:hover:text-fuchsia-300 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900/30 transition-colors"
+            className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
           >
             <RiEditLine className="h-5 w-5" />
             <span className="sr-only">수정</span>
@@ -669,22 +669,22 @@ function LinkItemCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                  className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/10 transition-colors"
                 >
                   <RiDeleteBinLine className="h-5 w-5" />
                   <span className="sr-only">삭제</span>
                 </Button>
               }
             />
-            <DialogContent className="sm:max-w-sm rounded-2xl p-6">
+            <DialogContent className="sm:max-w-sm rounded-2xl p-6 border border-border bg-card shadow-neo">
               <DialogHeader className="mb-4">
                 <DialogTitle className="text-center text-xl font-bold">
                   정말 삭제하시겠습니까?
                 </DialogTitle>
               </DialogHeader>
               <div className="py-2 text-center space-y-4">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <p className="font-semibold text-lg text-slate-900 dark:text-slate-100 break-all line-clamp-2">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
+                  <p className="font-bold text-lg text-slate-900 dark:text-slate-100 break-all line-clamp-2">
                     {link.title}
                   </p>
                 </div>
@@ -695,7 +695,7 @@ function LinkItemCard({
               <DialogFooter className="gap-2 sm:gap-2 sm:justify-center mt-6">
                 <Button
                   variant="outline"
-                  className="rounded-xl h-12 flex-1 font-semibold"
+                  className="rounded-xl h-11 flex-1 font-bold border border-border"
                   onClick={() => setIsDeleteDialogOpen(false)}
                   disabled={deleteLinkMutation.isPending}
                 >
@@ -703,7 +703,7 @@ function LinkItemCard({
                 </Button>
                 <Button
                   variant="destructive"
-                  className="rounded-xl h-12 flex-1 font-semibold"
+                  className="rounded-xl h-11 flex-1 font-bold bg-red-500 hover:bg-red-600 text-white"
                   onClick={onDelete}
                   disabled={deleteLinkMutation.isPending}
                 >
@@ -724,22 +724,21 @@ function LinkItemCard({
 // ─── 비로그인 상태 화면 ────────────────────────────────────────────────────────
 function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 font-sans">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-background font-sans">
       <div className="w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
         {/* 아이콘 */}
         <div className="relative">
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500 to-purple-600 shadow-xl shadow-fuchsia-300/40 dark:shadow-fuchsia-900/40">
-            <RiLockLine className="h-12 w-12 text-white" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 border border-primary/25 shadow-sm text-primary">
+            <RiLockLine className="h-12 w-12" />
           </div>
-          <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-fuchsia-400 to-purple-500 opacity-20 blur-xl" />
         </div>
 
         {/* 안내 문구 */}
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-extrabold tracking-tight text-purple-950 dark:text-white">
-            MyLink에 오신 걸 환영합니다
+          <h1 className="text-4xl font-black tracking-tight text-foreground">
+            MyLink
           </h1>
-          <p className="text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
+          <p className="text-base text-slate-500 dark:text-slate-400 font-semibold leading-relaxed max-w-sm">
             나만의 링크 페이지를 만들고, 하나의 URL로
             <br />
             모든 SNS와 웹사이트를 한 번에 공유하세요.
@@ -755,12 +754,12 @@ function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
           ].map((item) => (
             <div
               key={item.title}
-              className="flex items-center gap-4 p-4 rounded-2xl bg-white/70 dark:bg-purple-950/50 backdrop-blur-xl ring-1 ring-fuchsia-200/40 dark:ring-purple-500/20 shadow-sm"
+              className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border shadow-neo"
             >
               <span className="text-2xl">{item.icon}</span>
               <div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{item.title}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
+                <p className="text-sm font-bold text-foreground">{item.title}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -770,13 +769,13 @@ function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
         <Button
           onClick={onSignIn}
           size="lg"
-          className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white shadow-lg shadow-fuchsia-300/40 dark:shadow-fuchsia-900/40 hover:shadow-xl hover:shadow-fuchsia-300/50 hover:-translate-y-0.5 transition-all duration-200 gap-3"
+          className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-white hover:bg-primary/95 shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-[1px] gap-3 flex items-center justify-center"
         >
           <RiGoogleLine className="h-5 w-5" />
           Google로 시작하기
         </Button>
 
-        <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
+        <p className="text-xs text-slate-400 dark:text-slate-500 text-center font-semibold">
           로그인하면 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다.
         </p>
       </div>
@@ -854,10 +853,10 @@ export default function Page() {
   // ── 전체 로딩 (Auth 초기화 중) ──────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 font-sans">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-background font-sans">
         <div className="flex flex-col items-center gap-4">
-          <RiLoader4Line className="h-10 w-10 animate-spin text-fuchsia-500" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">불러오는 중...</p>
+          <RiLoader4Line className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">불러오는 중...</p>
         </div>
       </div>
     );
@@ -870,7 +869,7 @@ export default function Page() {
 
   // ── 로그인 상태 대시보드 ──────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-gradient-to-b from-fuchsia-50 via-purple-50 to-violet-100 dark:from-purple-950 dark:via-violet-950 dark:to-slate-900 selection:bg-fuchsia-200 dark:selection:bg-purple-800 font-sans">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-background selection:bg-primary/45 font-sans">
       <div className="w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Profile Section */}
@@ -896,29 +895,27 @@ export default function Page() {
               render={
                 <Button
                   disabled={addLinkMutation.isPending}
-                  className="w-full group rounded-[1.25rem] h-14 bg-white/80 dark:bg-purple-950/80 backdrop-blur-md border border-fuchsia-200/60 dark:border-purple-700/60 hover:bg-fuchsia-50 dark:hover:bg-purple-900/60 text-fuchsia-700 dark:text-purple-200 mb-4 transition-all duration-500 shadow-sm hover:shadow-[0_8px_30px_rgba(168,85,247,0.12)] dark:hover:shadow-[0_8px_30px_rgba(168,85,247,0.08)] hover:-translate-y-1 relative overflow-hidden"
+                  className="w-full group rounded-2xl h-11 bg-white dark:bg-card border border-border hover:bg-primary/10 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
                 />
               }
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fuchsia-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-              <div className="absolute inset-0 ring-1 ring-inset ring-transparent group-hover:ring-fuchsia-400/30 dark:group-hover:ring-purple-400/30 rounded-[1.25rem] transition-colors duration-500" />
               {addLinkMutation.isPending ? (
                 <>
-                  <RiLoader4Line className="mr-2 h-6 w-6 text-fuchsia-500 dark:text-purple-400 opacity-80 animate-spin" />
-                  <span className="font-semibold tracking-wide text-fuchsia-700 dark:text-purple-200">
+                  <RiLoader4Line className="mr-2 h-6 w-6 text-primary opacity-80 animate-spin shrink-0" />
+                  <span className="font-bold tracking-wide">
                     추가 중...
                   </span>
                 </>
               ) : (
                 <>
-                  <RiAddLine className="mr-2 h-6 w-6 text-fuchsia-500 dark:text-purple-400 opacity-80 group-hover:rotate-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-500 ease-out" />
-                  <span className="font-semibold tracking-wide text-fuchsia-700 dark:text-purple-200 group-hover:text-fuchsia-900 dark:group-hover:text-white transition-all duration-500">
+                  <RiAddLine className="mr-2 h-6 w-6 text-primary opacity-80 group-hover:rotate-90 group-hover:scale-110 group-hover:opacity-100 transition-all duration-300 ease-out shrink-0" />
+                  <span className="font-bold tracking-wide">
                     새로운 링크 추가하기
                   </span>
                 </>
               )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md rounded-2xl p-6">
+            <DialogContent className="sm:max-w-md border border-border bg-card shadow-neo rounded-2xl p-6">
               <DialogHeader>
                 <DialogTitle className="text-center text-xl font-bold">
                   링크 추가
@@ -929,14 +926,14 @@ export default function Page() {
                 className="space-y-6 mt-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium">
+                  <Label htmlFor="title" className="text-sm font-bold">
                     타이틀
                   </Label>
                   <Input
                     id="title"
                     placeholder="예: 내 포트폴리오"
                     {...register("title")}
-                    className={`h-12 rounded-xl transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`h-12 rounded-xl border border-border focus-visible:ring-1 focus-visible:ring-primary bg-white dark:bg-card transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   />
                   {errors.title && (
                     <p className="text-sm text-red-500 animate-in fade-in slide-in-from-top-1">
@@ -945,7 +942,7 @@ export default function Page() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="url" className="text-sm font-medium">
+                  <Label htmlFor="url" className="text-sm font-bold">
                     URL
                   </Label>
                   <Input
@@ -953,7 +950,7 @@ export default function Page() {
                     type="text"
                     placeholder="예: example.com"
                     {...register("url")}
-                    className={`h-12 rounded-xl transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                    className={`h-12 rounded-xl border border-border focus-visible:ring-1 focus-visible:ring-primary bg-white dark:bg-card transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     dir="ltr"
                   />
                   {errors.url && (
@@ -964,7 +961,7 @@ export default function Page() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full h-12 rounded-xl font-semibold text-md"
+                  className="w-full h-12 rounded-xl font-bold bg-primary text-white shadow-md hover:shadow-lg transition-all"
                   disabled={addLinkMutation.isPending}
                 >
                   저장하기
@@ -978,12 +975,12 @@ export default function Page() {
             ? Array.from({ length: 3 }).map((_, i) => (
                 <Card
                   key={`skeleton-${i}`}
-                  className="border-0 bg-fuchsia-50/60 dark:bg-purple-950/40 backdrop-blur-xl shadow-sm rounded-[1.25rem] overflow-hidden ring-1 ring-fuchsia-100/50 dark:ring-purple-700/20 animate-pulse"
+                  className="border border-border bg-card shadow-neo rounded-2xl overflow-hidden animate-pulse"
                 >
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-700/50"></div>
-                      <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-700/50"></div>
+                      <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800/80 border border-border"></div>
+                      <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-800/80"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -999,13 +996,13 @@ export default function Page() {
           {/* 링크가 없을 때 빈 상태 */}
           {!isLinksLoading && links.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-fuchsia-100 dark:bg-purple-900/40">
-                <RiLinksLine className="h-8 w-8 text-fuchsia-400 dark:text-purple-400" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 border border-primary/20">
+                <RiLinksLine className="h-8 w-8 text-primary" />
               </div>
-              <p className="text-base font-semibold text-slate-600 dark:text-slate-300">
+              <p className="text-base font-bold text-foreground">
                 아직 링크가 없어요
               </p>
-              <p className="text-sm text-slate-400 dark:text-slate-500">
+              <p className="text-sm text-slate-400 dark:text-slate-500 font-semibold">
                 위 버튼을 눌러 첫 번째 링크를 추가해보세요!
               </p>
             </div>
