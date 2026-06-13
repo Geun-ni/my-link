@@ -302,7 +302,7 @@ function ProfileEditor({
   const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
 
   return (
-    <div className="flex flex-col items-center gap-4 text-center w-full">
+    <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-primary/10 dark:border-primary/20 shadow-xl flex flex-col items-center text-center relative">
       {/* 프로필 사진 */}
       <div className="group relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-border shadow-sm transition-transform duration-300 hover:scale-105">
         {userProfile.photoURL ? (
@@ -456,14 +456,14 @@ function ProfileEditor({
                 setIsEditingBio(true);
                 setTimeout(() => bioTextareaRef.current?.focus(), 0);
               }}
-              className="group/bio flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors cursor-text max-w-[300px] text-center"
+              className="group/bio w-full max-w-[300px] bg-white/40 dark:bg-slate-900/40 px-4 py-2 rounded-2xl border border-white/10 dark:border-slate-800/20 hover:bg-primary/5 transition-all text-center flex justify-center items-center cursor-pointer min-h-[38px]"
               title="클릭하여 소개 수정"
             >
               <span
                 className={`text-sm whitespace-pre-wrap ${
                   userProfile.bio
-                    ? "text-slate-600 dark:text-slate-400 font-bold"
-                    : "text-slate-400 dark:text-slate-600 italic font-medium"
+                    ? "text-slate-600 dark:text-slate-300 font-medium"
+                    : "text-slate-400 dark:text-slate-500 italic font-medium"
                 }`}
               >
                 {userProfile.bio || "소개를 입력하세요..."}
@@ -777,7 +777,7 @@ function LinkItemCard({
 // ─── 비로그인 상태 화면 ────────────────────────────────────────────────────────
 function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-background font-sans">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-transparent font-sans">
       <div className="w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
         {/* 아이콘 */}
         <div className="relative">
@@ -984,7 +984,7 @@ export default function Page() {
   // ── 전체 로딩 (Auth 초기화 중) ──────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-background font-sans">
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-transparent font-sans">
         <div className="flex flex-col items-center gap-4">
           <RiLoader4Line className="h-10 w-10 animate-spin text-primary" />
           <p className="text-sm font-bold text-slate-500 dark:text-slate-400">불러오는 중...</p>
@@ -1000,7 +1000,7 @@ export default function Page() {
 
   // ── 로그인 상태 대시보드 ──────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-background selection:bg-primary/45 font-sans">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-transparent selection:bg-primary/45 font-sans">
       <div className="w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Profile Section */}

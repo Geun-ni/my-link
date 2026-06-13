@@ -132,7 +132,7 @@ export default function PublicProfilePage({ params }: PageProps) {
   // 로딩 상태 피드백 (로딩 스켈레톤 및 아름다운 애니메이션)
   if (isLoading) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-background font-sans">
+      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-transparent font-sans">
         <div className="w-full max-w-md flex flex-col items-center gap-6">
           <RiLoader4Line className="h-10 w-10 animate-spin text-primary" />
           <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
@@ -146,7 +146,7 @@ export default function PublicProfilePage({ params }: PageProps) {
   // 기타 조회 에러 발생 시
   if (isError || !data) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-background font-sans">
+      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 py-24 bg-transparent font-sans">
         <div className="w-full max-w-md flex flex-col items-center gap-4 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-red-100 bg-red-50/50 dark:bg-red-950/10 shadow-sm">
             <RiAlertLine className="h-8 w-8 text-red-500" />
@@ -177,12 +177,12 @@ export default function PublicProfilePage({ params }: PageProps) {
   });
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-background font-sans">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-transparent font-sans">
       {/* 본문 콘텐츠 컨테이너 */}
       <div className="w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         
-        {/* 상단 프로필 카드 */}
-        <div className="w-full bg-card rounded-3xl p-6 border border-border shadow-neo flex flex-col items-center text-center relative group/profile">
+        {/* 상단 프로필 카드 (글래스모피즘 + 파스텔 그라데이션 적용) */}
+        <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-primary/10 dark:border-primary/20 shadow-xl flex flex-col items-center text-center relative group/profile">
           
           {/* 공유 버튼 */}
           <Button
@@ -234,7 +234,7 @@ export default function PublicProfilePage({ params }: PageProps) {
 
           {/* 한 줄 소개 */}
           {userProfile.bio && (
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-secondary/40 px-4 py-2 rounded-2xl w-full border border-border whitespace-pre-wrap">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-white/40 dark:bg-slate-900/40 px-4 py-2 rounded-2xl w-full border border-white/10 dark:border-slate-800/20 whitespace-pre-wrap">
               {userProfile.bio}
             </p>
           )}

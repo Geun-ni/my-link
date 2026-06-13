@@ -11,14 +11,23 @@ import {
   RiLoader4Line,
   RiShareLine,
   RiEditLine,
+  RiSunLine,
+  RiMoonLine,
 } from "@remixicon/react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export function Header() {
   const { user, userProfile, loading, signInWithGoogle, signOut } = useAuth();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
@@ -64,6 +73,23 @@ export function Header() {
 
         {/* 우측 액션 영역 */}
         <div className="flex items-center gap-2">
+          {/* 테마 토글 버튼 */}
+          {mounted && (
+            <Button
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full text-slate-500 dark:text-slate-400 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 hover:bg-fuchsia-50 dark:hover:bg-purple-950/40 transition-colors shrink-0"
+              title={resolvedTheme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+            >
+              {resolvedTheme === "dark" ? (
+                <RiSunLine className="h-5 w-5" />
+              ) : (
+                <RiMoonLine className="h-5 w-5" />
+              )}
+            </Button>
+          )}
+
           {loading ? (
             <div className="flex items-center gap-2 px-3 py-1.5">
               <RiLoader4Line className="h-4 w-4 animate-spin text-fuchsia-400" />
