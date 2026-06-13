@@ -75,9 +75,9 @@ export function Header() {
       >
         {/* 슬라이딩 indicator — inline style로 직접 transition */}
         <span
-          className="absolute top-1 h-6 w-6 rounded-full"
+          className="absolute top-1 left-1 h-6 w-6 rounded-full"
           style={{
-            transform: isDark ? "translateX(1.75rem)" : "translateX(0)",
+            transform: isDark ? "translateX(1.5rem)" : "translateX(0)",
             backgroundColor: isDark ? "rgb(147,51,234)" : "white",
             boxShadow: isDark
               ? "0 2px 8px rgba(147,51,234,0.5)"
