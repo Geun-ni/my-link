@@ -361,6 +361,7 @@ function ProfileEditor({
               title="클릭하여 이름 변경"
             >
               <span>{userProfile.username}</span>
+              <RiEditLine className="h-4 w-4 text-slate-400 opacity-0 group-hover/un:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
         </div>
@@ -432,6 +433,7 @@ function ProfileEditor({
               <span className="text-sm text-slate-500 dark:text-slate-400 font-mono">
                 {userProfile.displayName}
               </span>
+              <RiEditLine className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover/dn:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
         </div>
@@ -461,7 +463,7 @@ function ProfileEditor({
                 setIsEditingBio(true);
                 setTimeout(() => bioTextareaRef.current?.focus(), 0);
               }}
-              className="group/bio w-full max-w-[300px] bg-white/40 dark:bg-slate-900/40 px-4 py-2 rounded-2xl border border-white/10 dark:border-slate-800/20 hover:bg-primary/5 transition-all text-center flex justify-center items-center cursor-pointer min-h-[38px]"
+              className="group/bio w-full max-w-[300px] bg-white/40 dark:bg-slate-900/40 px-4 py-2 rounded-2xl border border-white/10 dark:border-slate-800/20 hover:bg-primary/5 transition-all text-center flex justify-center items-center gap-1.5 cursor-pointer min-h-[38px]"
               title="클릭하여 소개 수정"
             >
               <span
@@ -472,6 +474,7 @@ function ProfileEditor({
               >
                 {userProfile.bio || "소개를 입력하세요..."}
               </span>
+              <RiEditLine className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover/bio:opacity-100 transition-opacity shrink-0" />
             </button>
           )}
         </div>

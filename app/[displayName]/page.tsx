@@ -240,10 +240,10 @@ export default function PublicProfilePage({ params }: PageProps) {
             {isMyPage && (
               <Link
                 href="/"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-primary hover:bg-primary/10 border border-border transition-colors"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-primary/10 border border-slate-200 dark:border-slate-800/80 transition-all shadow-sm"
                 title="대시보드에서 프로필 편집하기"
               >
-
+                <RiEditLine className="h-4 w-4" />
               </Link>
             )}
           </div>
