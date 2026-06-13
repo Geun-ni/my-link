@@ -179,18 +179,18 @@ export default function PublicProfilePage({ params }: PageProps) {
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-transparent font-sans">
       {/* 내 페이지 전용 배경 오로라 그라데이션 데코레이션 (중앙 집중형) */}
-      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center dark:hidden">
-        {/* 중앙 약간 왼쪽에 은은한 Indigo/Purple 그라데이션 원 */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-indigo-200/40 to-purple-200/40 blur-[130px] animate-pulse duration-[8000ms] -translate-x-[20%] -translate-y-[10%]" />
-        {/* 중앙 약간 오른쪽에 은은한 Pink/Emerald 그라데이션 원 */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/30 to-emerald-200/30 blur-[130px] animate-pulse duration-[10000ms] translate-x-[20%] translate-y-[10%]" />
+      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center">
+        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 (다크모드: 딥 퓨샤/퍼플) */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 dark:from-fuchsia-950/20 dark:to-purple-950/15 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
+        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 (다크모드: 딥 인디고/슬레이트) */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 dark:from-indigo-950/15 dark:to-slate-900/10 blur-[120px] translate-x-[15%] translate-y-[10%]" />
       </div>
 
       {/* 본문 콘텐츠 컨테이너 */}
-      <div className="w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         
-        {/* 상단 프로필 카드 (글래스모피즘 + 파스텔 그라데이션 적용) */}
-        <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-white/20 dark:border-white/15 shadow-xl flex flex-col items-center text-center relative group/profile">
+        {/* 상단 프로필 카드 (깔끔한 불투명 백그라운드) */}
+        <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 border border-white/80 dark:border-slate-800/80 shadow-xl flex flex-col items-center text-center relative group/profile">
           
           {/* 공유 버튼 */}
           <Button
@@ -203,13 +203,10 @@ export default function PublicProfilePage({ params }: PageProps) {
             <RiShareLine className="h-4 w-4" />
           </Button>
 
-          {/* 프로필 이미지 - 엠비언트 백글로우 번짐 디자인 적용 */}
-          <div className="relative group/avatar mb-4 shrink-0">
-            {/* 뒤에서 번져나가는 그라데이션 광채 */}
-            <div className="absolute inset-0 -z-10 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 dark:from-cyan-500 dark:via-fuchsia-500 dark:to-pink-500 blur-2xl opacity-45 group-hover/avatar:scale-110 group-hover/avatar:opacity-65 transition-all duration-500" />
-
+          {/* 프로필 이미지 - 깔끔하게 정돈된 아바타 */}
+          <div className="relative mb-4 shrink-0">
             {/* 실제 프로필 이미지 영역 */}
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-full overflow-hidden border border-white/30 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 transition-transform duration-300 group-hover/avatar:scale-105">
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full overflow-hidden border border-white/30 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 transition-transform duration-300 hover:scale-105">
               {userProfile.photoURL ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -269,7 +266,7 @@ export default function PublicProfilePage({ params }: PageProps) {
               return (
                  <Card
                    key={link.id}
-                   className="border border-white/20 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md hover:bg-white/35 dark:hover:bg-slate-950/35 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 group rounded-2xl overflow-hidden relative cursor-pointer ring-0"
+                   className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 group rounded-2xl overflow-hidden relative cursor-pointer ring-0"
                  >
                   <a
                     href={link.url}

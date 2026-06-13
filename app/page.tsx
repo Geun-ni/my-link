@@ -302,12 +302,14 @@ function ProfileEditor({
   const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
 
   return (
-    <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-white/20 dark:border-white/15 shadow-xl flex flex-col items-center text-center relative">
-      {/* 프로필 사진 - 엠비언트 백글로우 번짐 디자인 적용 */}
-      <div className="relative group/avatar shrink-0 mb-2">
+    <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 border border-white/80 dark:border-slate-800/80 shadow-xl flex flex-col items-center text-center relative overflow-hidden">
+      <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -z-0" />
+      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-400/20 rounded-full blur-3xl -z-0" />
 
+      {/* 프로필 사진 - 깔끔하게 정돈된 아바타 */}
+      <div className="relative shrink-0 mb-2 z-10">
         {/* 실제 프로필 이미지 영역 */}
-        <div className="relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-white/30 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 transition-transform duration-300 group-hover/avatar:scale-105">
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-white/30 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 transition-transform duration-300 hover:scale-105">
           {userProfile.photoURL ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -380,8 +382,8 @@ function ProfileEditor({
                   disabled={isLoading}
                   placeholder="URL 슬러그 입력"
                   className={`h-9 rounded-xl font-mono text-sm bg-white dark:bg-card pr-16 transition-colors ${displayNameError
-                      ? "border-red-500 focus-visible:ring-red-500"
-                      : "border border-border focus-visible:ring-1 focus-visible:ring-primary"
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : "border border-border focus-visible:ring-1 focus-visible:ring-primary"
                     }`}
                 />
                 <div className="absolute right-1.5 flex items-center gap-0.5">
@@ -464,8 +466,8 @@ function ProfileEditor({
             >
               <span
                 className={`text-sm whitespace-pre-wrap ${userProfile.bio
-                    ? "text-slate-600 dark:text-slate-300 font-medium"
-                    : "text-slate-400 dark:text-slate-500 italic font-medium"
+                  ? "text-slate-600 dark:text-slate-300 font-medium"
+                  : "text-slate-400 dark:text-slate-500 italic font-medium"
                   }`}
               >
                 {userProfile.bio || "소개를 입력하세요..."}
@@ -590,7 +592,7 @@ function LinkItemCard({
   if (isEditing) {
     return (
       <div ref={setNodeRef} style={style} className="w-full">
-        <Card className="border border-white/20 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md p-3.5 relative font-sans rounded-2xl overflow-hidden shadow-sm ring-0">
+        <Card className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 p-3.5 relative font-sans rounded-2xl overflow-hidden shadow-sm ring-0">
           <form
             onSubmit={handleSubmit(onUpdate)}
             onBlur={handleFormBlur}
@@ -649,7 +651,7 @@ function LinkItemCard({
 
   return (
     <div ref={setNodeRef} style={style} className="w-full">
-      <Card className={`border border-white/20 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md hover:bg-white/35 dark:hover:bg-slate-950/35 transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] shadow-sm hover:shadow-md ring-0 ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
+      <Card className={`border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] shadow-sm hover:shadow-md ring-0 ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
         <div className="flex items-center">
           {/* 드래그 핸들 */}
           <div
@@ -1002,8 +1004,16 @@ export default function Page() {
 
   // ── 로그인 상태 대시보드 ──────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-transparent selection:bg-primary/45 font-sans">
-      <div className="w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-transparent selection:bg-primary/45 font-sans">
+      {/* 대시보드 전용 배경 오로라 그라데이션 데코레이션 (중앙 집중형) */}
+      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center">
+        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 (다크모드: 딥 퓨샤/퍼플) */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 dark:from-fuchsia-950/20 dark:to-purple-950/15 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
+        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 (다크모드: 딥 인디고/슬레이트) */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 dark:from-indigo-950/15 dark:to-slate-900/10 blur-[120px] translate-x-[15%] translate-y-[10%]" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Profile Section */}
         <ProfileEditor
@@ -1028,7 +1038,7 @@ export default function Page() {
               render={
                 <Button
                   disabled={addLinkMutation.isPending}
-                  className="w-full group rounded-2xl h-11 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md border border-white/20 dark:border-white/15 hover:bg-primary/10 dark:hover:bg-primary/10 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
+                  className="w-full group rounded-2xl h-11 bg-white dark:bg-slate-900 border border-white/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-850 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
                 />
               }
             >
@@ -1108,7 +1118,7 @@ export default function Page() {
             Array.from({ length: 3 }).map((_, i) => (
               <Card
                 key={`skeleton-${i}`}
-                className="border border-white/10 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 shadow-sm rounded-2xl overflow-hidden animate-pulse ring-0"
+                className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden animate-pulse ring-0"
               >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
