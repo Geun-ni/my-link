@@ -302,7 +302,7 @@ function ProfileEditor({
   const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 border border-white/80 dark:border-slate-800/80 shadow-xl flex flex-col items-center text-center relative overflow-hidden">
+    <div className="w-full bg-white dark:bg-[#09172F] rounded-3xl p-6 border border-white/80 dark:border-none shadow-xl dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] flex flex-col items-center text-center relative overflow-hidden">
       <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -z-0" />
       <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-400/20 rounded-full blur-3xl -z-0" />
 
@@ -592,7 +592,7 @@ function LinkItemCard({
   if (isEditing) {
     return (
       <div ref={setNodeRef} style={style} className="w-full">
-        <Card className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 p-3.5 relative font-sans rounded-2xl overflow-hidden shadow-sm ring-0">
+        <Card className="border border-white/80 dark:border-none bg-white dark:bg-[#09172F] shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] p-3.5 relative font-sans rounded-2xl overflow-hidden ring-0">
           <form
             onSubmit={handleSubmit(onUpdate)}
             onBlur={handleFormBlur}
@@ -651,7 +651,7 @@ function LinkItemCard({
 
   return (
     <div ref={setNodeRef} style={style} className="w-full">
-      <Card className={`border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] shadow-sm hover:shadow-md ring-0 ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
+      <Card className={`border border-white/80 dark:border-none bg-white dark:bg-[#09172F] hover:bg-slate-50 dark:hover:bg-[#0f2142] transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] hover:shadow-md ring-0 ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
         <div className="flex items-center">
           {/* 드래그 핸들 */}
           <div
@@ -667,21 +667,21 @@ function LinkItemCard({
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 py-3 px-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-2xl flex items-center justify-between group overflow-hidden"
+            className="flex-1 py-2.5 px-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-2xl flex items-center justify-between group overflow-hidden"
           >
             <div className="flex items-center gap-4 z-10 w-full overflow-hidden">
               {faviconUrl ? (
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={faviconUrl}
                     alt={`${link.title} icon`}
-                    className="h-5 w-5 object-contain"
+                    className="h-4.5 w-4.5 object-contain"
                   />
                 </div>
               ) : (
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
-                  <RiLinksLine className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                  <RiLinksLine className="h-4.5 w-4.5 text-primary shrink-0" />
                 </div>
               )}
               <div className="flex flex-col justify-center gap-0.5 z-10 w-full overflow-hidden">
@@ -1006,12 +1006,20 @@ export default function Page() {
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center py-16 px-6 bg-transparent selection:bg-primary/45 font-sans">
       {/* 대시보드 전용 배경 오로라 그라데이션 데코레이션 (중앙 집중형) */}
-      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center">
-        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 (다크모드: 딥 퓨샤/퍼플) */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 dark:from-fuchsia-950/20 dark:to-purple-950/15 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
-        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 (다크모드: 딥 인디고/슬레이트) */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 dark:from-indigo-950/15 dark:to-slate-900/10 blur-[120px] translate-x-[15%] translate-y-[10%]" />
+      {/* 라이트 모드용 인디핑크 (다크 시 hidden) */}
+      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center dark:hidden">
+        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
+        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 blur-[120px] translate-x-[15%] translate-y-[10%]" />
       </div>
+      {/* 다크 모드용 골드/퍼플 radial-gradient (라이트 시 hidden) */}
+      <div 
+        className="absolute inset-0 -z-20 overflow-hidden pointer-events-none hidden dark:block"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(255,208,90,0.08), rgba(167,92,255,0.12), transparent 70%)'
+        }}
+      />
 
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
@@ -1038,7 +1046,7 @@ export default function Page() {
               render={
                 <Button
                   disabled={addLinkMutation.isPending}
-                  className="w-full group rounded-2xl h-11 bg-white dark:bg-slate-900 border border-white/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-850 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
+                  className="w-full group rounded-2xl h-11 bg-white dark:bg-[#09172F] border border-white/80 dark:border-none hover:bg-slate-50 dark:hover:bg-[#0f2142] text-primary mb-4 transition-all shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
                 />
               }
             >
@@ -1118,11 +1126,11 @@ export default function Page() {
             Array.from({ length: 3 }).map((_, i) => (
               <Card
                 key={`skeleton-${i}`}
-                className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden animate-pulse ring-0"
+                className="border border-white/80 dark:border-none bg-white dark:bg-[#09172F] shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] rounded-2xl overflow-hidden animate-pulse ring-0"
               >
-                <CardContent className="p-4 flex items-center justify-between">
+                <CardContent className="p-3 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800/80 border border-border"></div>
+                    <div className="h-9 w-9 rounded-full bg-slate-200 dark:bg-slate-800/80 border border-border"></div>
                     <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-800/80"></div>
                   </div>
                 </CardContent>

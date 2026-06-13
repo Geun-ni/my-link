@@ -47,7 +47,7 @@ function getFaviconUrl(url: string) {
 export default function PublicProfilePage({ params }: PageProps) {
   // Next.js 16/React 19 비동기 params 풀기
   const { displayName } = React.use(params);
-  
+
   // 현재 로그인한 사용자 정보 조회
   const { user: currentUser } = useAuth();
 
@@ -179,19 +179,27 @@ export default function PublicProfilePage({ params }: PageProps) {
   return (
     <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-transparent font-sans">
       {/* 내 페이지 전용 배경 오로라 그라데이션 데코레이션 (중앙 집중형) */}
-      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center">
-        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 (다크모드: 딥 퓨샤/퍼플) */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 dark:from-fuchsia-950/20 dark:to-purple-950/15 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
-        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 (다크모드: 딥 인디고/슬레이트) */}
-        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 dark:from-indigo-950/15 dark:to-slate-900/10 blur-[120px] translate-x-[15%] translate-y-[10%]" />
+      {/* 라이트 모드용 인디핑크 (다크 시 hidden) */}
+      <div className="absolute inset-0 -z-20 overflow-hidden pointer-events-none flex items-center justify-center dark:hidden">
+        {/* 중앙 약간 왼쪽에 은은한 인디핑크 / 로즈 그라데이션 원 */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-rose-200/35 to-pink-200/35 blur-[120px] -translate-x-[15%] -translate-y-[10%]" />
+        {/* 중앙 약간 오른쪽에 은은한 연분홍 / 샌드 그라데이션 원 */}
+        <div className="absolute w-[90%] max-w-[500px] h-[500px] rounded-full bg-gradient-to-br from-pink-200/25 to-amber-100/20 blur-[120px] translate-x-[15%] translate-y-[10%]" />
       </div>
+      {/* 다크 모드용 골드/퍼플 radial-gradient (라이트 시 hidden) */}
+      <div
+        className="absolute inset-0 -z-20 overflow-hidden pointer-events-none hidden dark:block"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(255,208,90,0.08), rgba(167,92,255,0.12), transparent 70%)'
+        }}
+      />
 
       {/* 본문 콘텐츠 컨테이너 */}
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
+
         {/* 상단 프로필 카드 (깔끔한 불투명 백그라운드) */}
-        <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 border border-white/80 dark:border-slate-800/80 shadow-xl flex flex-col items-center text-center relative group/profile">
-          
+        <div className="w-full bg-white dark:bg-[#09172F] rounded-3xl p-6 border border-white/80 dark:border-none shadow-xl dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] flex flex-col items-center text-center relative group/profile">
+
           {/* 공유 버튼 */}
           <Button
             onClick={handleShare}
@@ -235,7 +243,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                 className="inline-flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-primary hover:bg-primary/10 border border-border transition-colors"
                 title="대시보드에서 프로필 편집하기"
               >
-                <RiEditLine className="h-4 w-4" />
+
               </Link>
             )}
           </div>
@@ -264,30 +272,30 @@ export default function PublicProfilePage({ params }: PageProps) {
             sortedLinks.map((link) => {
               const faviconUrl = getFaviconUrl(link.url);
               return (
-                 <Card
-                   key={link.id}
-                   className="border border-white/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-850 shadow-sm hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 group rounded-2xl overflow-hidden relative cursor-pointer ring-0"
-                 >
+                <Card
+                  key={link.id}
+                  className="border border-white/80 dark:border-none bg-white dark:bg-[#09172F] hover:bg-slate-50 dark:hover:bg-[#0f2142] shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] hover:shadow-md hover:-translate-y-[2px] transition-all duration-300 group rounded-2xl overflow-hidden relative cursor-pointer ring-0"
+                >
                   <a
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => handleLinkClick(link.id, link.url)}
-                    className="flex items-center justify-between py-3 px-4 w-full focus:outline-none"
+                    className="flex items-center justify-between py-2.5 px-4 w-full focus:outline-none"
                   >
                     <div className="flex items-center gap-4 w-full overflow-hidden">
                       {faviconUrl ? (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={faviconUrl}
                             alt={`${link.title} icon`}
-                            className="h-5 w-5 object-contain"
+                            className="h-4.5 w-4.5 object-contain"
                           />
                         </div>
                       ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
-                          <RiLinksLine className="h-5 w-5 text-primary shrink-0" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                          <RiLinksLine className="h-4.5 w-4.5 text-primary shrink-0" />
                         </div>
                       )}
                       <div className="flex flex-col justify-center gap-0.5 w-full overflow-hidden text-left">
