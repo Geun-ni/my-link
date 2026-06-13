@@ -138,7 +138,16 @@ function ProfileEditor({
   userId,
   updateProfile,
 }: {
-  userProfile: { displayName: string; bio: string; username: string; photoURL: string };
+  userProfile: {
+    displayName: string;
+    bio: string;
+    username: string;
+    photoURL: string;
+    musicTitle?: string;
+    musicArtist?: string;
+    musicUrl?: string;
+    musicEnabled?: boolean;
+  };
   userId: string;
   updateProfile: (data: UpdateProfileData) => Promise<void>;
 }) {
@@ -162,6 +171,8 @@ function ProfileEditor({
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
   const usernameInputRef = useRef<HTMLInputElement>(null);
+
+
 
   // displayName 유효성 검사
   function validateDisplayName(value: string): string | null {
@@ -298,6 +309,7 @@ function ProfileEditor({
       setIsEditingUsername(false);
     }
   };
+
 
   const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
 
@@ -1032,6 +1044,8 @@ export default function Page() {
           userId={user.uid}
           updateProfile={updateProfile}
         />
+
+
 
         {/* Links Section */}
         <div className="w-full flex flex-col gap-4">

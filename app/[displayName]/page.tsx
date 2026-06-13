@@ -259,6 +259,8 @@ export default function PublicProfilePage({ params }: PageProps) {
           )}
         </div>
 
+
+
         {/* 링크 리스트 영역 */}
         <div className="w-full flex flex-col gap-3.5">
           {sortedLinks.length === 0 ? (
