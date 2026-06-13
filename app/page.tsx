@@ -302,23 +302,27 @@ function ProfileEditor({
   const isLoading = isCheckingDisplayName || isSavingDisplayName || isSavingBio || isSavingUsername;
 
   return (
-    <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-primary/10 dark:border-primary/20 shadow-xl flex flex-col items-center text-center relative">
-      {/* 프로필 사진 */}
-      <div className="group relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-border shadow-sm transition-transform duration-300 hover:scale-105">
-        {userProfile.photoURL ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={userProfile.photoURL}
-            alt={userProfile.username}
-            className="h-full w-full rounded-full object-cover"
-          />
-        ) : (
-          <div className="h-full w-full rounded-full bg-primary flex items-center justify-center">
-            <span className="text-3xl font-black text-white">
-              {(userProfile.username || userProfile.displayName || "?")[0].toUpperCase()}
-            </span>
-          </div>
-        )}
+    <div className="w-full bg-gradient-to-br from-indigo-50/80 via-white/70 to-purple-50/80 dark:from-slate-950/80 dark:via-slate-900/70 dark:to-purple-950/20 backdrop-blur-md rounded-3xl p-6 border border-white/20 dark:border-white/15 shadow-xl flex flex-col items-center text-center relative">
+      {/* 프로필 사진 - 엠비언트 백글로우 번짐 디자인 적용 */}
+      <div className="relative group/avatar shrink-0 mb-2">
+
+        {/* 실제 프로필 이미지 영역 */}
+        <div className="relative flex h-28 w-28 items-center justify-center rounded-full overflow-hidden border border-white/30 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 transition-transform duration-300 group-hover/avatar:scale-105">
+          {userProfile.photoURL ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={userProfile.photoURL}
+              alt={userProfile.username}
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center">
+              <span className="text-3xl font-black text-white">
+                {(userProfile.username || userProfile.displayName || "?")[0].toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3 mt-1 w-full font-sans">
@@ -375,11 +379,10 @@ function ProfileEditor({
                   onKeyDown={handleDisplayNameKeyDown}
                   disabled={isLoading}
                   placeholder="URL 슬러그 입력"
-                  className={`h-9 rounded-xl font-mono text-sm bg-white dark:bg-card pr-16 transition-colors ${
-                    displayNameError
+                  className={`h-9 rounded-xl font-mono text-sm bg-white dark:bg-card pr-16 transition-colors ${displayNameError
                       ? "border-red-500 focus-visible:ring-red-500"
                       : "border border-border focus-visible:ring-1 focus-visible:ring-primary"
-                  }`}
+                    }`}
                 />
                 <div className="absolute right-1.5 flex items-center gap-0.5">
                   <Button
@@ -460,11 +463,10 @@ function ProfileEditor({
               title="클릭하여 소개 수정"
             >
               <span
-                className={`text-sm whitespace-pre-wrap ${
-                  userProfile.bio
+                className={`text-sm whitespace-pre-wrap ${userProfile.bio
                     ? "text-slate-600 dark:text-slate-300 font-medium"
                     : "text-slate-400 dark:text-slate-500 italic font-medium"
-                }`}
+                  }`}
               >
                 {userProfile.bio || "소개를 입력하세요..."}
               </span>
@@ -588,7 +590,7 @@ function LinkItemCard({
   if (isEditing) {
     return (
       <div ref={setNodeRef} style={style} className="w-full">
-        <Card className="border border-border bg-card shadow-neo p-3.5 relative font-sans rounded-2xl overflow-hidden">
+        <Card className="border border-white/20 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md p-3.5 relative font-sans rounded-2xl overflow-hidden shadow-sm ring-0">
           <form
             onSubmit={handleSubmit(onUpdate)}
             onBlur={handleFormBlur}
@@ -647,7 +649,7 @@ function LinkItemCard({
 
   return (
     <div ref={setNodeRef} style={style} className="w-full">
-      <Card className={`border border-border bg-card shadow-neo hover:shadow-neo-hover transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
+      <Card className={`border border-white/20 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md hover:bg-white/35 dark:hover:bg-slate-950/35 transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] shadow-sm hover:shadow-md ring-0 ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
         <div className="flex items-center">
           {/* 드래그 핸들 */}
           <div
@@ -807,7 +809,7 @@ function LoginPrompt({ onSignIn }: { onSignIn: () => void }) {
           ].map((item) => (
             <div
               key={item.title}
-              className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border shadow-neo"
+              className="flex items-center gap-4 p-4 rounded-2xl bg-white/20 dark:bg-slate-950/25 backdrop-blur-md border border-white/20 dark:border-white/15 shadow-sm"
             >
               <span className="text-2xl">{item.icon}</span>
               <div>
@@ -1026,7 +1028,7 @@ export default function Page() {
               render={
                 <Button
                   disabled={addLinkMutation.isPending}
-                  className="w-full group rounded-2xl h-11 bg-white dark:bg-card border border-border hover:bg-primary/10 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
+                  className="w-full group rounded-2xl h-11 bg-white/20 dark:bg-slate-950/25 backdrop-blur-md border border-white/20 dark:border-white/15 hover:bg-primary/10 dark:hover:bg-primary/10 text-primary mb-4 transition-all shadow-sm hover:shadow-md hover:-translate-y-[1px] relative overflow-hidden font-bold flex items-center justify-center"
                 />
               }
             >
@@ -1106,7 +1108,7 @@ export default function Page() {
             Array.from({ length: 3 }).map((_, i) => (
               <Card
                 key={`skeleton-${i}`}
-                className="border border-border bg-card shadow-neo rounded-2xl overflow-hidden animate-pulse"
+                className="border border-white/10 dark:border-white/15 bg-white/20 dark:bg-slate-950/25 shadow-sm rounded-2xl overflow-hidden animate-pulse ring-0"
               >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
