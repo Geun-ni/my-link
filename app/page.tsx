@@ -315,8 +315,17 @@ function ProfileEditor({
 
   return (
     <div className="w-full bg-white dark:bg-[#09172F] rounded-3xl p-6 border border-white/80 dark:border-none shadow-xl dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] flex flex-col items-center text-center relative overflow-hidden">
-      <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -z-0" />
-      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-400/20 rounded-full blur-3xl -z-0" />
+      {/* 라이트 모드: 좌상단 라벤더/보라 그라데이션 */}
+      <div className="absolute top-0 left-0 w-48 h-48 rounded-full -translate-x-1/3 -translate-y-1/3 blur-2xl pointer-events-none dark:hidden"
+        style={{ background: "radial-gradient(circle, rgba(192,132,252,0.28) 0%, rgba(216,180,254,0.14) 50%, transparent 75%)" }}
+      />
+      {/* 라이트 모드: 우하단 핑크/로즈 그라데이션 */}
+      <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full translate-x-1/3 translate-y-1/3 blur-2xl pointer-events-none dark:hidden"
+        style={{ background: "radial-gradient(circle, rgba(251,113,133,0.18) 0%, rgba(244,114,182,0.10) 50%, transparent 75%)" }}
+      />
+      {/* 다크 모드 기존 블러 */}
+      <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-400/20 rounded-full blur-3xl -z-0 hidden dark:block" />
+      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-400/20 rounded-full blur-3xl -z-0 hidden dark:block" />
 
       {/* 프로필 사진 - 깔끔하게 정돈된 아바타 */}
       <div className="relative shrink-0 mb-2 z-10">

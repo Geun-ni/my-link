@@ -198,7 +198,16 @@ export default function PublicProfilePage({ params }: PageProps) {
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* 상단 프로필 카드 (깔끔한 불투명 백그라운드) */}
-        <div className="w-full bg-white dark:bg-[#09172F] rounded-3xl p-6 border border-white/80 dark:border-none shadow-xl dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] flex flex-col items-center text-center relative group/profile">
+        <div className="w-full bg-white dark:bg-[#09172F] rounded-3xl p-6 border border-white/80 dark:border-none shadow-xl dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05),_0_10px_30px_rgba(0,0,0,0.35)] flex flex-col items-center text-center relative overflow-hidden group/profile">
+
+          {/* 라이트 모드: 좌상단 라벤더/보라 그라데이션 */}
+          <div className="absolute top-0 left-0 w-52 h-52 rounded-full -translate-x-1/3 -translate-y-1/3 blur-2xl pointer-events-none dark:hidden"
+            style={{ background: "radial-gradient(circle, rgba(192,132,252,0.28) 0%, rgba(216,180,254,0.14) 50%, transparent 75%)" }}
+          />
+          {/* 라이트 모드: 우하단 핑크/로즈 그라데이션 */}
+          <div className="absolute bottom-0 right-0 w-52 h-52 rounded-full translate-x-1/3 translate-y-1/3 blur-2xl pointer-events-none dark:hidden"
+            style={{ background: "radial-gradient(circle, rgba(251,113,133,0.18) 0%, rgba(244,114,182,0.10) 50%, transparent 75%)" }}
+          />
 
           {/* 공유 버튼 */}
           <Button
