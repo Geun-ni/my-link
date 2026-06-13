@@ -165,6 +165,17 @@ export default function PublicProfilePage({ params }: PageProps) {
   const { userProfile, links } = data;
   const isMyPage = !!(currentUser && data?.userId && currentUser.uid === data.userId);
 
+  // position 오름차순 정렬, position이 없으면 기존처럼 createdAt 역순 정렬
+  const sortedLinks = [...links].sort((a, b) => {
+    const aPos = a.position !== undefined ? a.position : 999999;
+    const bPos = b.position !== undefined ? b.position : 999999;
+    if (aPos !== bPos) return aPos - bPos;
+
+    const aTime = a.createdAt ? ((a.createdAt as any).seconds || 0) : 0;
+    const bTime = b.createdAt ? ((b.createdAt as any).seconds || 0) : 0;
+    return bTime - aTime;
+  });
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center px-4 py-16 bg-background font-sans">
       {/* 본문 콘텐츠 컨테이너 */}
@@ -223,7 +234,7 @@ export default function PublicProfilePage({ params }: PageProps) {
 
           {/* 한 줄 소개 */}
           {userProfile.bio && (
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-secondary/40 px-4 py-2 rounded-2xl w-full border border-border">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed bg-secondary/40 px-4 py-2 rounded-2xl w-full border border-border whitespace-pre-wrap">
               {userProfile.bio}
             </p>
           )}
@@ -231,7 +242,7 @@ export default function PublicProfilePage({ params }: PageProps) {
 
         {/* 링크 리스트 영역 */}
         <div className="w-full flex flex-col gap-3.5">
-          {links.length === 0 ? (
+          {sortedLinks.length === 0 ? (
             <div className="w-full py-12 bg-card border border-dashed border-border rounded-3xl text-center shadow-sm">
               <RiLinksLine className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="text-sm font-bold text-slate-500">
@@ -239,7 +250,7 @@ export default function PublicProfilePage({ params }: PageProps) {
               </p>
             </div>
           ) : (
-            links.map((link) => {
+            sortedLinks.map((link) => {
               const faviconUrl = getFaviconUrl(link.url);
               return (
                 <Card

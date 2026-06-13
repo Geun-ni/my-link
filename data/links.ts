@@ -6,7 +6,9 @@ export interface LinkItem {
   url: string;
   icon?: string; // (선택) PRD 명세에 따라 Google Favicon API를 통해 자동 생성될 수도 있습니다.
   clicks?: number; // PRD: 추후 조회수 통계 기능을 위한 모델링 여백
+  createdAt?: Timestamp | Date; // 생성 시각
   updatedAt?: Timestamp | Date; // 마지막 수정 시각
+  position?: number; // 정렬 순서
 }
 
 export const dummyLinks: LinkItem[] = [

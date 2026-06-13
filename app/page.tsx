@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { LinkItem } from "@/data/links";
 import {
   collection,
@@ -12,8 +12,29 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
 import { checkDisplayNameAvailable } from "@/lib/firestore";
 import { useAuth, UpdateProfileData } from "@/hooks/useAuth";
 import { Card, CardTitle, CardContent } from "@/components/ui/card";
@@ -41,6 +62,7 @@ import {
   RiLockLine,
   RiCheckLine,
   RiCloseLine,
+  RiDragMove2Line,
 } from "@remixicon/react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -438,7 +460,7 @@ function ProfileEditor({
               title="클릭하여 소개 수정"
             >
               <span
-                className={`text-sm ${
+                className={`text-sm whitespace-pre-wrap ${
                   userProfile.bio
                     ? "text-slate-600 dark:text-slate-400 font-bold"
                     : "text-slate-400 dark:text-slate-600 italic font-medium"
@@ -466,6 +488,23 @@ function LinkItemCard({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const isCancellingRef = useRef(false);
   const queryClient = useQueryClient();
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: "relative" as const,
+    zIndex: isDragging ? 50 : "auto",
+  };
 
   const {
     register,
@@ -548,176 +587,190 @@ function LinkItemCard({
 
   if (isEditing) {
     return (
-      <Card className="border border-border bg-card shadow-neo p-3.5 relative font-sans rounded-2xl overflow-hidden">
-        <form
-          onSubmit={handleSubmit(onUpdate)}
-          onBlur={handleFormBlur}
-          className="space-y-4"
-        >
-          <div className="space-y-1">
-            <Input
-              placeholder="타이틀"
-              {...register("title")}
-              className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
-            />
-            {errors.title && (
-              <p className="text-xs text-red-500 ml-1">{errors.title.message}</p>
-            )}
-          </div>
-          <div className="space-y-1">
-            <Input
-              type="text"
-              placeholder="URL"
-              {...register("url")}
-              className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
-              dir="ltr"
-            />
-            {errors.url && (
-              <p className="text-xs text-red-500 ml-1">{errors.url.message}</p>
-            )}
-          </div>
-          <div className="flex gap-2 justify-end pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-xl h-9 px-4 font-bold border border-border"
-              onClick={handleCancel}
-              disabled={updateLinkMutation.isPending}
-            >
-              취소
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="rounded-xl h-9 px-4 font-bold bg-primary text-white"
-              disabled={updateLinkMutation.isPending}
-            >
-              {updateLinkMutation.isPending ? (
-                <RiLoader4Line className="h-4 w-4 animate-spin mr-1.5" />
-              ) : null}
-              저장
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <div ref={setNodeRef} style={style} className="w-full">
+        <Card className="border border-border bg-card shadow-neo p-3.5 relative font-sans rounded-2xl overflow-hidden">
+          <form
+            onSubmit={handleSubmit(onUpdate)}
+            onBlur={handleFormBlur}
+            className="space-y-4"
+          >
+            <div className="space-y-1">
+              <Input
+                placeholder="타이틀"
+                {...register("title")}
+                className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.title ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
+              />
+              {errors.title && (
+                <p className="text-xs text-red-500 ml-1">{errors.title.message}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Input
+                type="text"
+                placeholder="URL"
+                {...register("url")}
+                className={`h-9.5 rounded-xl bg-white dark:bg-card border border-border transition-colors ${errors.url ? "border-red-500 focus-visible:ring-red-500" : "focus-visible:ring-1 focus-visible:ring-primary"}`}
+                dir="ltr"
+              />
+              {errors.url && (
+                <p className="text-xs text-red-500 ml-1">{errors.url.message}</p>
+              )}
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl h-9 px-4 font-bold border border-border"
+                onClick={handleCancel}
+                disabled={updateLinkMutation.isPending}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="rounded-xl h-9 px-4 font-bold bg-primary text-white"
+                disabled={updateLinkMutation.isPending}
+              >
+                {updateLinkMutation.isPending ? (
+                  <RiLoader4Line className="h-4 w-4 animate-spin mr-1.5" />
+                ) : null}
+                저장
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="border border-border bg-card shadow-neo hover:shadow-neo-hover transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px]">
-      <div className="flex items-center">
-        <Link
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 py-3 px-4 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-2xl flex items-center justify-between group overflow-hidden"
-        >
-          <div className="flex items-center gap-4 z-10 w-full overflow-hidden">
-            {faviconUrl ? (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={faviconUrl}
-                  alt={`${link.title} icon`}
-                  className="h-5 w-5 object-contain"
-                />
-              </div>
-            ) : (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
-                <RiLinksLine className="h-5 w-5 text-primary shrink-0" />
-              </div>
-            )}
-            <div className="flex flex-col justify-center gap-0.5 z-10 w-full overflow-hidden">
-              <CardTitle className="text-base font-bold text-foreground group-hover:underline transition-all truncate">
-                {link.title}
-              </CardTitle>
-              {formatUpdatedAt(link.updatedAt) && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
-                  {formatUpdatedAt(link.updatedAt)}
-                </p>
+    <div ref={setNodeRef} style={style} className="w-full">
+      <Card className={`border border-border bg-card shadow-neo hover:shadow-neo-hover transition-all duration-300 rounded-2xl overflow-hidden relative font-sans hover:-translate-y-[2px] ${isDragging ? "shadow-md border-primary/40 ring-1 ring-primary/20 bg-slate-50/50" : ""}`}>
+        <div className="flex items-center">
+          {/* 드래그 핸들 */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="pl-3.5 pr-1 py-4 text-slate-400 hover:text-primary cursor-grab active:cursor-grabbing shrink-0 z-20 transition-colors touch-none"
+            title="드래그하여 순서 변경"
+          >
+            <RiDragMove2Line className="h-5 w-5" />
+          </div>
+
+          <Link
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 py-3 px-3 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-2xl flex items-center justify-between group overflow-hidden"
+          >
+            <div className="flex items-center gap-4 z-10 w-full overflow-hidden">
+              {faviconUrl ? (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={faviconUrl}
+                    alt={`${link.title} icon`}
+                    className="h-5 w-5 object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 border border-border overflow-hidden">
+                  <RiLinksLine className="h-5 w-5 text-primary shrink-0" />
+                </div>
               )}
+              <div className="flex flex-col justify-center gap-0.5 z-10 w-full overflow-hidden">
+                <CardTitle className="text-base font-bold text-foreground group-hover:underline transition-all truncate">
+                  {link.title}
+                </CardTitle>
+                {formatUpdatedAt(link.updatedAt) && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                    {formatUpdatedAt(link.updatedAt)}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="bg-primary/10 border border-primary/20 p-1.5 rounded-full opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden sm:block shrink-0 mr-1">
-            <RiArrowRightSLine className="h-5 w-5 text-primary" />
-          </div>
-        </Link>
+            <div className="bg-primary/10 border border-primary/20 p-1.5 rounded-full opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 hidden sm:block shrink-0 mr-1">
+              <RiArrowRightSLine className="h-5 w-5 text-primary" />
+            </div>
+          </Link>
 
-        {/* Edit and Delete Buttons */}
-        <div className="pr-4 pl-1 flex items-center gap-0.5 shrink-0 z-20 relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(true)}
-            className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-          >
-            <RiEditLine className="h-5 w-5" />
-            <span className="sr-only">수정</span>
-          </Button>
+          {/* Edit and Delete Buttons */}
+          <div className="pr-4 pl-1 flex items-center gap-0.5 shrink-0 z-20 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditing(true)}
+              className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <RiEditLine className="h-5 w-5" />
+              <span className="sr-only">수정</span>
+            </Button>
 
-          <Dialog
-            open={isDeleteDialogOpen}
-            onOpenChange={(open) => {
-              if (deleteLinkMutation.isPending) return;
-              setIsDeleteDialogOpen(open);
-            }}
-          >
-            <DialogTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/10 transition-colors"
-                >
-                  <RiDeleteBinLine className="h-5 w-5" />
-                  <span className="sr-only">삭제</span>
-                </Button>
-              }
-            />
-            <DialogContent className="sm:max-w-sm rounded-2xl p-6 border border-border bg-card shadow-neo">
-              <DialogHeader className="mb-4">
-                <DialogTitle className="text-center text-xl font-bold">
-                  정말 삭제하시겠습니까?
-                </DialogTitle>
-              </DialogHeader>
-              <div className="py-2 text-center space-y-4">
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
-                  <p className="font-bold text-lg text-slate-900 dark:text-slate-100 break-all line-clamp-2">
-                    {link.title}
+            <Dialog
+              open={isDeleteDialogOpen}
+              onOpenChange={(open) => {
+                if (deleteLinkMutation.isPending) return;
+                setIsDeleteDialogOpen(open);
+              }}
+            >
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 sm:h-9 sm:w-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/10 transition-colors"
+                  >
+                    <RiDeleteBinLine className="h-5 w-5" />
+                    <span className="sr-only">삭제</span>
+                  </Button>
+                }
+              />
+              <DialogContent className="sm:max-w-sm rounded-2xl p-6 border border-border bg-card shadow-neo">
+                <DialogHeader className="mb-4">
+                  <DialogTitle className="text-center text-xl font-bold">
+                    정말 삭제하시겠습니까?
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="py-2 text-center space-y-4">
+                  <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
+                    <p className="font-bold text-lg text-slate-900 dark:text-slate-100 break-all line-clamp-2">
+                      {link.title}
+                    </p>
+                  </div>
+                  <p className="font-bold text-red-500 flex items-center justify-center gap-1.5">
+                    이 작업은 되돌릴 수 없습니다.
                   </p>
                 </div>
-                <p className="font-bold text-red-500 flex items-center justify-center gap-1.5">
-                  이 작업은 되돌릴 수 없습니다.
-                </p>
-              </div>
-              <DialogFooter className="gap-2 sm:gap-2 sm:justify-center mt-6">
-                <Button
-                  variant="outline"
-                  className="rounded-xl h-11 flex-1 font-bold border border-border"
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                  disabled={deleteLinkMutation.isPending}
-                >
-                  취소
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="rounded-xl h-11 flex-1 font-bold bg-red-500 hover:bg-red-600 text-white"
-                  onClick={onDelete}
-                  disabled={deleteLinkMutation.isPending}
-                >
-                  {deleteLinkMutation.isPending ? (
-                    <RiLoader4Line className="h-5 w-5 animate-spin mr-2" />
-                  ) : null}
-                  {deleteLinkMutation.isPending ? "삭제 중..." : "삭제하기"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter className="gap-2 sm:gap-2 sm:justify-center mt-6">
+                  <Button
+                    variant="outline"
+                    className="rounded-xl h-11 flex-1 font-bold border border-border"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                    disabled={deleteLinkMutation.isPending}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="rounded-xl h-11 flex-1 font-bold bg-red-500 hover:bg-red-600 text-white"
+                    onClick={onDelete}
+                    disabled={deleteLinkMutation.isPending}
+                  >
+                    {deleteLinkMutation.isPending ? (
+                      <RiLoader4Line className="h-5 w-5 animate-spin mr-2" />
+                    ) : null}
+                    {deleteLinkMutation.isPending ? "삭제 중..." : "삭제하기"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
 
@@ -789,6 +842,12 @@ export default function Page() {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
+  // 하이드레이션 완료 시점을 추적하기 위한 상태
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // TanStack Query로 링크 목록 조회 및 캐싱
   const { data: links = [], isLoading: isLinksLoading } = useQuery<LinkItem[]>({
     queryKey: ["links", user?.uid],
@@ -805,6 +864,36 @@ export default function Page() {
       })) as LinkItem[];
     },
     enabled: !!user,
+  });
+
+  // dnd-kit 센서 설정 (MouseSensor, TouchSensor로 분할)
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 3, // 마우스 이동 감지 거리를 3픽셀로 축소하여 즉각 반응하도록 처리
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // 터치는 250ms 롱 프레스로 스크롤 동작과 분리
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // 메모리 상에서 position 기준으로 링크 1차 정렬, position이 없으면 기존처럼 createdAt 역순 정렬
+  const sortedLinks = [...links].sort((a, b) => {
+    const aPos = a.position !== undefined ? a.position : 999999;
+    const bPos = b.position !== undefined ? b.position : 999999;
+    if (aPos !== bPos) return aPos - bPos;
+
+    // createdAt(Timestamp) 비교 처리
+    const aTime = a.createdAt ? ((a.createdAt as any).seconds || 0) : 0;
+    const bTime = b.createdAt ? ((b.createdAt as any).seconds || 0) : 0;
+    return bTime - aTime;
   });
 
   const {
@@ -828,11 +917,17 @@ export default function Page() {
       if (!/^https?:\/\//i.test(formattedUrl)) {
         formattedUrl = `https://${formattedUrl}`;
       }
+
+      // 새 링크의 position 값 계산 (현재 정렬된 리스트에서 최대 position + 1)
+      const maxPos = links.reduce((max, link) => Math.max(max, link.position ?? 0), -1);
+      const newPosition = maxPos + 1;
+
       await addDoc(collection(db, `users/${user.uid}/links`), {
         title: data.title.trim(),
         url: formattedUrl,
         clicks: 0,
         createdAt: serverTimestamp(),
+        position: newPosition,
       });
     },
     onSuccess: () => {
@@ -848,6 +943,42 @@ export default function Page() {
   const onSubmit = async (data: LinkFormValues) => {
     setIsOpen(false);
     await addLinkMutation.mutateAsync(data);
+  };
+
+  // 드래그 앤 드롭 완료 핸들러 (낙관적 업데이트 및 Firestore writeBatch 일괄 전송)
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !user) return;
+
+    const oldIndex = sortedLinks.findIndex((l) => l.id === active.id);
+    const newIndex = sortedLinks.findIndex((l) => l.id === over.id);
+
+    const newOrderedLinks = arrayMove(sortedLinks, oldIndex, newIndex);
+
+    // 각 링크 객체의 position 필드를 바뀐 배열의 인덱스 번호로 매핑하여 새 배열 생성
+    const updatedLinks = newOrderedLinks.map((link, idx) => ({
+      ...link,
+      position: idx,
+    }));
+
+    // 1. 낙관적 업데이트로 로컬 React Query 캐시를 먼저 갱신
+    queryClient.setQueryData(["links", user.uid], updatedLinks);
+
+    // 2. Firestore 일괄 전송 (Write Batch)
+    try {
+      const batch = writeBatch(db);
+      newOrderedLinks.forEach((link, idx) => {
+        if (!link.id) return;
+        const docRef = doc(db, `users/${user.uid}/links`, link.id);
+        batch.update(docRef, { position: idx });
+      });
+      await batch.commit();
+      toast.success("링크 순서가 저장되었습니다.", { duration: 1500 });
+    } catch (error) {
+      toast.error("순서 저장 중 오류가 발생했습니다.");
+      // 실패 시 캐시 롤백
+      queryClient.invalidateQueries({ queryKey: ["links", user.uid] });
+    }
   };
 
   // ── 전체 로딩 (Auth 초기화 중) ──────────────────────────────────────────────
@@ -971,30 +1102,22 @@ export default function Page() {
           </Dialog>
 
           {/* Link List */}
-          {isLinksLoading
-            ? Array.from({ length: 3 }).map((_, i) => (
-                <Card
-                  key={`skeleton-${i}`}
-                  className="border border-border bg-card shadow-neo rounded-2xl overflow-hidden animate-pulse"
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800/80 border border-border"></div>
-                      <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-800/80"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            : links.map((link) => (
-                <LinkItemCard
-                  key={link.id}
-                  link={link}
-                  userId={user.uid}
-                />
-              ))}
-
-          {/* 링크가 없을 때 빈 상태 */}
-          {!isLinksLoading && links.length === 0 && (
+          {isLinksLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card
+                key={`skeleton-${i}`}
+                className="border border-border bg-card shadow-neo rounded-2xl overflow-hidden animate-pulse"
+              >
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800/80 border border-border"></div>
+                    <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-800/80"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : sortedLinks.length === 0 ? (
+            /* 링크가 없을 때 빈 상태 */
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 border border-primary/20">
                 <RiLinksLine className="h-8 w-8 text-primary" />
@@ -1006,6 +1129,39 @@ export default function Page() {
                 위 버튼을 눌러 첫 번째 링크를 추가해보세요!
               </p>
             </div>
+          ) : !mounted ? (
+            /* 하이드레이션 오류 방지를 위한 정적 초기 리스트 */
+            <div className="flex flex-col gap-4 w-full">
+              {sortedLinks.map((link) => (
+                <LinkItemCard
+                  key={link.id}
+                  link={link}
+                  userId={user.uid}
+                />
+              ))}
+            </div>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+            >
+              <SortableContext
+                items={sortedLinks.map((l) => l.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-4 w-full">
+                  {sortedLinks.map((link) => (
+                    <LinkItemCard
+                      key={link.id}
+                      link={link}
+                      userId={user.uid}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>
